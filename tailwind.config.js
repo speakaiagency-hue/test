@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./index.html",
-    "./client/src/**/*.{js,ts,jsx,tsx}", // corrigido: aponta para client/src
+    "./client/src/**/*.{js,ts,jsx,tsx}", // aponta para client/src
     "./shared/**/*.{js,ts,jsx,tsx}",     // se você usa pasta shared
   ],
   theme: {
