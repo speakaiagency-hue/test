@@ -142,6 +142,16 @@ export default function Signup() {
               </div>
             )}
 
+            {/* 🔑 Link de redefinir senha */}
+            <div className="text-center mb-2">
+              <a
+                href="/reset-password"
+                className="text-indigo-500 hover:underline text-sm font-medium"
+              >
+                Redefinir senha
+              </a>
+            </div>
+
             {/* Signup Button */}
             <Button
               type="submit"
@@ -163,7 +173,10 @@ export default function Signup() {
 
             {/* Info Text */}
             <p className="text-xs text-muted-foreground text-center">
-              Já tem conta? <a href="/login" className="text-indigo-400 hover:underline">Faça login</a>
+              Já tem conta?{" "}
+              <a href="/login" className="text-indigo-400 hover:underline">
+                Faça login
+              </a>
             </p>
           </form>
         </CardContent>
