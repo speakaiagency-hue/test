@@ -36,6 +36,9 @@ const CREDIT_MAP: Record<string, number> = {
   "f1e06ef0-05d0-11f1-b57c-c9aa21f3f207": 5000,  // Produto de Planos
 };
 
+// Senha padrão para usuários criados automaticamente
+const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "Speak123";
+
 export async function verifyKiwifySignature(payload: string, signature: string): Promise<boolean> {
   const secret = process.env.KIWIFY_WEBHOOK_SECRET || "";
   if (!secret) return true;
@@ -67,20 +70,19 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
     }
 
     // 🔎 Evitar duplicatas
-    const alreadyProcessed = await storage.hasProcessedPurchase?.(data.purchase_id);
+    const alreadyProcessed = await storage.hasProcessedPurchase(data.purchase_id);
     if (alreadyProcessed) {
       console.log(`ℹ️ Compra ${data.purchase_id} já processada, ignorando duplicata.`);
       return {
         success: true,
         message: "Compra já processada",
-        userId: alreadyProcessed.userId,
         creditsAdded: 0,
       };
     }
 
     // 🔎 Normalizar email
     const normalizedEmail = data.customer_email.toLowerCase();
-    let user = await storage.getUserByEmail?.(normalizedEmail);
+    let user = await storage.getUserByEmail(normalizedEmail);
 
     if (!user) {
       // ✅ Criar usuário automático com senha padrão
@@ -88,7 +90,7 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
       user = await storage.createUser({
         email: normalizedEmail,
         name: data.customer_name,
-        password: "Speak123", // depois o cliente troca
+        password: DEFAULT_PASSWORD, // senha padrão
       });
     }
 
@@ -96,7 +98,7 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
     await storage.addCredits(user.id, creditsToAdd, data.purchase_id);
 
     // 🔎 Log do evento
-    await storage.logWebhookEvent?.(
+    await storage.logWebhookEvent(
       data.purchase_id,
       user.id,
       creditsToAdd,
