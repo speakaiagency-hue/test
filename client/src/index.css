@@ -84,7 +84,7 @@
   --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-  --border: 0 0% 0%; /* borda invisível */
+  --border: 217 33% 25%; /* corrigido: borda visível no dark */
   --input: 217 33% 17%;
   --ring: 263 70% 50%;
 }
@@ -100,6 +100,17 @@
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-bold tracking-tight;
+  }
+
+  /* Correção para inputs e botões */
+  input, textarea, select {
+    @apply border border-input bg-background text-foreground rounded-md px-3 py-2;
+  }
+  button {
+    @apply bg-primary text-primary-foreground font-medium rounded-md px-4 py-2 hover:bg-primary/90;
+  }
+  label {
+    @apply text-sm font-medium text-foreground;
   }
 }
 
@@ -139,7 +150,6 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-400;
   }
 
-  /* Marquee Animation para Showcase */
   @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
