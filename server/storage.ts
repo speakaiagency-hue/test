@@ -10,7 +10,7 @@ import {
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { eq, sql } from "drizzle-orm";
-import bcrypt from "bcryptjs"; // ✅ para hash de senha
+import * as bcrypt from "bcryptjs"; // ✅ correto
 
 let db: ReturnType<typeof drizzle> | null = null;
 
