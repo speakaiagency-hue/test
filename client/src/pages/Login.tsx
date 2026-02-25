@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
-import { Link } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export default function Login() {
   const { toast } = useToast();
@@ -34,7 +33,7 @@ export default function Login() {
         throw new Error(data.error || "Erro ao fazer login");
       }
 
-      // Store token in localStorage
+      // ✅ Armazena token e usuário
       localStorage.setItem("authToken", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -126,6 +125,16 @@ export default function Login() {
               </div>
             )}
 
+            {/* 🔑 Link de redefinir senha */}
+            <div className="text-center mb-2">
+              <a
+                href="/reset-password"
+                className="text-indigo-500 hover:underline text-sm font-medium"
+              >
+                Redefinir senha
+              </a>
+            </div>
+
             {/* Login Button */}
             <Button
               type="submit"
@@ -146,7 +155,9 @@ export default function Login() {
             </Button>
 
             {/* Info Text */}
-            <p className="text-xs text-muted-foreground text-center">Use suas credenciais de cliente</p>
+            <p className="text-xs text-muted-foreground text-center">
+              Use suas credenciais de cliente
+            </p>
           </form>
 
           {/* Sign up Link */}
