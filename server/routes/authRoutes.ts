@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-import * as bcrypt from "./bcryptjs"; // ✅ aponta para o arquivo local
+import * as bcrypt from "../bcryptjs";
 import { generateToken, authMiddleware } from "../middleware/authMiddleware";
 import type { IStorage } from "../storage";
 import { createKiwifyService } from "../services/kiwifyService";
