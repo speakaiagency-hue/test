@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ResetPassword from "./pages/ResetPassword"; // ✅ import da nova página
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import Prompt from "./pages/Prompt";
@@ -20,6 +21,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/reset-password" component={ResetPassword} /> {/* ✅ nova rota */}
       <Route path="/" component={() => <Layout><Home /></Layout>} />
       <Route path="/chat" component={() => <ProtectedRoute><Layout><Chat /></Layout></ProtectedRoute>} />
       <Route path="/prompt" component={() => <ProtectedRoute><Layout><Prompt /></Layout></ProtectedRoute>} />
