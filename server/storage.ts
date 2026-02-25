@@ -10,7 +10,7 @@ import {
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { eq, sql } from "drizzle-orm";
-import * as bcrypt from "./bcryptjs"; // ✅ aponta para o arquivo local
+import * as bcrypt from "../bcryptjs";
 
 let db: ReturnType<typeof drizzle> | null = null;
 
