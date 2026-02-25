@@ -10,6 +10,7 @@ import {
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { eq, sql } from "drizzle-orm";
+import bcrypt from "bcryptjs"; // ✅ para hash de senha
 
 let db: ReturnType<typeof drizzle> | null = null;
 
@@ -129,11 +130,22 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(user: InsertUser) {
     const database = await getDb();
+
+    const normalizedEmail = user.email?.toLowerCase();
+    const normalizedUsername = user.username
+      ? user.username.toLowerCase()
+      : normalizedEmail; // usa email como username se não vier nada
+
+    // ✅ Hash da senha antes de salvar
+    const hashedPassword = await bcrypt.hash(user.password, 10);
+
     const normalizedUser = {
       ...user,
-      username: user.username.toLowerCase(),
-      email: user.email?.toLowerCase(),
+      username: normalizedUsername,
+      email: normalizedEmail,
+      password: hashedPassword,
     };
+
     const result = await database.insert(users).values(normalizedUser).returning();
     const newUser = result[0];
 
@@ -165,7 +177,8 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(id: string, password: string) {
     const database = await getDb();
-    const result = await database.update(users).set({ password }).where(eq(users.id, id)).returning();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await database.update(users).set({ password: hashedPassword }).where(eq(users.id, id)).returning();
     return result[0];
   }
 
@@ -252,7 +265,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-    // ✅ Compras pendentes
+   // ✅ Compras pendentes
   async addPendingPurchase(data: { purchaseId: string; email: string; productId: string; credits: number; status: string }) {
     const database = await getDb();
     await database.insert(pendingPurchases).values({
