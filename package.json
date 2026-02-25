@@ -84,8 +84,6 @@
     "ws": "^8.18.0",
     "zod": "^3.25.76",
     "zod-validation-error": "^3.4.0",
-
-    // 🔹 Build tools moved here
     "vite": "^7.2.4",
     "@vitejs/plugin-react": "^5.0.4",
     "@replit/vite-plugin-cartographer": "^0.4.4",
