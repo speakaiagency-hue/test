@@ -32,11 +32,10 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(409).json({ error: "Email já cadastrado" });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-
+      // ✅ Passa senha em texto puro, storage.ts faz o hash
       const newUser = await storage.createUser({
         username: email,
-        password: hashedPassword,
+        password,
       });
 
       await storage.updateUserProfile(newUser.id, { email, name });
@@ -130,8 +129,8 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(404).json({ error: "Usuário não encontrado" });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await storage.updateUserPassword(user.id, hashedPassword);
+      // ✅ Passa senha em texto puro
+      await storage.updateUserPassword(user.id, newPassword);
 
       res.json({ success: true, message: "Senha redefinida com sucesso" });
     } catch (error) {
@@ -216,8 +215,8 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(401).json({ error: "Senha atual incorreta" });
       }
 
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-      const updated = await storage.updateUserPassword(req.user!.id, hashedPassword);
+      // ✅ Passa senha em texto puro
+      const updated = await storage.updateUserPassword(req.user!.id, newPassword);
       if (!updated) return res.status(404).json({ error: "Usuário não encontrado" });
 
       res.json({ success: true, message: "Senha alterada com sucesso" });
