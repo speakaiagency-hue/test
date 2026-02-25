@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-import bcrypt from "bcrypt";
+import * as bcrypt from "bcryptjs"; // ✅ consistente com storage.ts
 import { generateToken, authMiddleware } from "../middleware/authMiddleware";
 import type { IStorage } from "../storage";
 import { createKiwifyService } from "../services/kiwifyService";
