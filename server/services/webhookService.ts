@@ -88,7 +88,7 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
       user = await storage.createUser({
         email: normalizedEmail,
         name: data.customer_name,
-        password: "senhaPadrao123", // depois o cliente troca
+        password: "Speak123", // depois o cliente troca
       });
     }
 
