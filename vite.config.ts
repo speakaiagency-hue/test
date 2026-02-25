@@ -4,9 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-// Plugins opcionais do Replit (sem await)
-import cartographer from "@replit/vite-plugin-cartographer";
-import devBanner from "@replit/vite-plugin-dev-banner";
+// Plugins opcionais do Replit (exports nomeados)
+import { cartographer } from "@replit/vite-plugin-cartographer";
+import { devBanner } from "@replit/vite-plugin-dev-banner";
 
 export default defineConfig({
   plugins: [
