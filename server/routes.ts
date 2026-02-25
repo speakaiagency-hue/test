@@ -20,7 +20,7 @@ export async function registerRoutes(
   const promptService = await createPromptService();
   const imageService = await createImageService();
 
-  // Video Generation API (Protected)
+  // ✅ Video Generation API (Protected)
   app.post("/api/video/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -44,7 +44,7 @@ export async function registerRoutes(
     }
   });
 
-  // Chat API - Send Message (Protected)
+  // ✅ Chat API - Send Message (Protected)
   app.post("/api/chat/send-message", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -73,7 +73,7 @@ export async function registerRoutes(
     }
   });
 
-  // Chat API - Generate Title
+  // ✅ Chat API - Generate Title
   app.post("/api/chat/generate-title", async (req: Request, res: Response) => {
     try {
       const { text } = req.body;
@@ -88,7 +88,7 @@ export async function registerRoutes(
     }
   });
 
-  // Chat API - Clear chat instance
+  // ✅ Chat API - Clear chat instance
   app.post("/api/chat/clear-session", async (req: Request, res: Response) => {
     try {
       const { conversationId } = req.body;
@@ -101,7 +101,7 @@ export async function registerRoutes(
     }
   });
 
-  // Prompt Generation API (Protected)
+  // ✅ Prompt Generation API (Protected)
   app.post("/api/prompt/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -130,7 +130,7 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Image Generation API (Protected) corrigida para múltiplas imagens
+  // ✅ Image Generation API (Protected)
   app.post("/api/image/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
