@@ -1,9 +1,9 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm, readFile } from "fs/promises";
+import path from "path";
 
-// server deps to bundle to reduce openat(2) syscalls
-// which helps cold start times
+// Lista de dependências que devem ser incluídas no bundle do servidor
 const allowlist = [
   "@google/generative-ai",
   "@neondatabase/serverless",
@@ -33,12 +33,16 @@ const allowlist = [
 ];
 
 async function buildAll() {
+  // Limpa a pasta dist
   await rm("dist", { recursive: true, force: true });
 
-  console.log("building client...");
-  await viteBuild();
+  console.log("🔨 Building client...");
+  await viteBuild({
+    configFile: path.resolve("vite.config.ts"),
+    mode: "production",
+  });
 
-  console.log("building server...");
+  console.log("🔨 Building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));
   const allDeps = [
     ...Object.keys(pkg.dependencies || {}),
@@ -62,6 +66,6 @@ async function buildAll() {
 }
 
 buildAll().catch((err) => {
-  console.error(err);
+  console.error("❌ Build failed:", err);
   process.exit(1);
 });
