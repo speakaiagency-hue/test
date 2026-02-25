@@ -81,7 +81,7 @@
   --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-  --border: 217 33% 25%; /* corrigido: borda visível no dark */
+  --border: 0 0% 0%; /* borda invisível */
   --input: 217 33% 17%;
   --ring: 263 70% 50%;
 }
@@ -142,28 +142,32 @@
     100% { transform: translateX(-50%); }
   }
 
+  /* Estado padrão: rodando (sem play-state para evitar conflito) */
   .animate-marquee {
     animation: marquee 30s linear infinite;
   }
 
+  /* Pausa por classe explícita (mobile toggle) */
   .animate-marquee.paused-marquee {
     animation-play-state: paused !important;
   }
 
+  /* Pausa por hover no desktop (via .group) */
   .group:hover .animate-marquee {
     animation-play-state: paused !important;
   }
 
+  /* Orientação para vídeos no modal */
   @media (orientation: portrait) {
     .video-orientation {
-      max-height: 70vh;
+      max-height: 70vh; /* limita altura em pé */
       object-fit: contain;
     }
   }
 
   @media (orientation: landscape) {
     .video-orientation {
-      max-height: 90vh;
+      max-height: 90vh; /* amplia no modo deitado */
       object-fit: cover;
     }
   }
