@@ -49,8 +49,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <Card className="w-full max-w-md border-border/50 shadow-2xl bg-card/50 backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4">
+      <Card className="w-full max-w-md border border-border/50 shadow-2xl bg-card/70 backdrop-blur-md">
         <CardHeader className="space-y-2 text-center">
           <div className="flex justify-center mb-4">
             <img src="/speak-ai-logo.png" alt="Speak AI" className="h-16 object-contain" />
