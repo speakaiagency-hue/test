@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: speakai
+    runtime: node
+    buildCommand: npm ci && node script/build.cjs
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
