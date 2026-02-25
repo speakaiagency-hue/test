@@ -60,7 +60,7 @@ export async function registerWebhookRoutes(app: Express, storage: IStorage, kiw
             parsed.checkout_link ||
             parsed.Product?.checkout_link ||
             parsed.product?.checkout_link ||
-            null, // ✅ incluído para capturar links curtos
+            null,
           value: parseFloat(
             parsed.Commissions?.charge_amount ||
               parsed.value ||
@@ -75,7 +75,7 @@ export async function registerWebhookRoutes(app: Express, storage: IStorage, kiw
 
         console.log("📦 Dados montados para handleKiwifyPurchase:", webhookData);
 
-        // 🔄 Processa compra (adiciona créditos ou registra como pendente)
+        // 🔄 Processa compra (cria usuário automático e adiciona créditos)
         const result = await handleKiwifyPurchase(webhookData);
 
         if (result.success) {
