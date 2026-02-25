@@ -177,6 +177,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(id: string, password: string) {
     const database = await getDb();
+    // ✅ Sempre recebe senha em texto puro e faz o hash aqui
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await database.update(users).set({ password: hashedPassword }).where(eq(users.id, id)).returning();
     return result[0];
@@ -265,7 +266,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-   // ✅ Compras pendentes
+     // ✅ Compras pendentes
   async addPendingPurchase(data: { purchaseId: string; email: string; productId: string; credits: number; status: string }) {
     const database = await getDb();
     await database.insert(pendingPurchases).values({
