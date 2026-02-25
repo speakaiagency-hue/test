@@ -16,7 +16,6 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(400).json({ error: "Email, senha e nome são obrigatórios" });
       }
 
-      // Normaliza email para minúsculas
       email = email.toLowerCase();
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -75,7 +74,6 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(400).json({ error: "Email e senha são obrigatórios" });
       }
 
-      // Normaliza email para minúsculas
       email = email.toLowerCase();
 
       const user = await storage.getUserByEmail(email);
@@ -109,6 +107,36 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Erro ao fazer login" });
+    }
+  });
+
+  // ✅ Redefinir senha (sem login)
+  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
+    try {
+      let { email, newPassword } = req.body;
+
+      if (!email || !newPassword) {
+        return res.status(400).json({ error: "Email e nova senha são obrigatórios" });
+      }
+
+      email = email.toLowerCase();
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ error: "Nova senha deve ter no mínimo 6 caracteres" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ error: "Usuário não encontrado" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(user.id, hashedPassword);
+
+      res.json({ success: true, message: "Senha redefinida com sucesso" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ error: "Erro ao redefinir senha" });
     }
   });
 
@@ -155,7 +183,6 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
       let { name, email } = req.body;
       if (!name || !email) return res.status(400).json({ error: "Nome e email são obrigatórios" });
 
-      // Normaliza email
       email = email.toLowerCase();
 
       const updatedUser = await storage.updateUserProfile(req.user!.id, { name, email });
@@ -168,7 +195,7 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
     }
   });
 
-  // ✅ Alterar senha
+  // ✅ Alterar senha (logado)
   app.post("/api/auth/change-password", authMiddleware, async (req: Request, res: Response) => {
     try {
       const { currentPassword, newPassword } = req.body;
@@ -189,7 +216,7 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(401).json({ error: "Senha atual incorreta" });
       }
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
       const updated = await storage.updateUserPassword(req.user!.id, hashedPassword);
       if (!updated) return res.status(404).json({ error: "Usuário não encontrado" });
 
