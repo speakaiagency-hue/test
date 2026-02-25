@@ -9,11 +9,18 @@ declare global {
   }
 }
 
+/**
+ * Middleware para verificar créditos do usuário antes de permitir acesso a rotas protegidas.
+ * - Garante que o usuário esteja autenticado
+ * - Busca saldo de créditos no banco
+ * - Bloqueia se não houver créditos suficientes
+ * - Expõe saldo restante em `res.locals.creditsRemaining`
+ */
 export async function creditsCheckMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.user) {
       console.warn("⚠️ CreditsMiddleware - req.user não definido");
-      return res.status(401).json({ error: "Não autenticado" });
+      return res.status(401).json({ error: "not_authenticated", message: "Usuário não autenticado" });
     }
 
     const creditsData = await storage.getUserCredits(req.user.id);
@@ -24,7 +31,7 @@ export async function creditsCheckMiddleware(req: Request, res: Response, next: 
       return res.status(404).json({ error: "user_not_found", message: "Usuário não encontrado" });
     }
 
-    req.userCredits = creditsData.credits;
+    req.userCredits = creditsData.credits ?? 0;
     console.log(`💳 CreditsMiddleware - Usuário ${req.user.id} tem ${req.userCredits} créditos`);
 
     if (req.userCredits <= 0) {
@@ -43,6 +50,6 @@ export async function creditsCheckMiddleware(req: Request, res: Response, next: 
     next();
   } catch (error) {
     console.error("🔥 CreditsMiddleware error:", error);
-    res.status(500).json({ error: "Erro ao verificar créditos" });
+    res.status(500).json({ error: "internal_error", message: "Erro ao verificar créditos" });
   }
 }
