@@ -1,5 +1,5 @@
 import type { Express, Request, Response } from "express";
-import * as bcrypt from "../bcryptjs";
+import * as bcrypt from "../bcryptjs"; // ✅ usa o módulo manual
 import { generateToken, authMiddleware } from "../middleware/authMiddleware";
 import type { IStorage } from "../storage";
 import { createKiwifyService } from "../services/kiwifyService";
@@ -81,6 +81,7 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(401).json({ error: "Email ou senha inválidos" });
       }
 
+      // ✅ Usa compare do módulo manual
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
         return res.status(401).json({ error: "Email ou senha inválidos" });
@@ -210,12 +211,13 @@ export async function registerAuthRoutes(app: Express, storage: IStorage) {
         return res.status(404).json({ error: "Usuário não encontrado" });
       }
 
+      // ✅ Usa compare do módulo manual
       const passwordMatch = await bcrypt.compare(currentPassword, user.password);
       if (!passwordMatch) {
         return res.status(401).json({ error: "Senha atual incorreta" });
       }
 
-      // ✅ Passa senha em texto puro
+            // ✅ Passa senha em texto puro
       const updated = await storage.updateUserPassword(req.user!.id, newPassword);
       if (!updated) return res.status(404).json({ error: "Usuário não encontrado" });
 
