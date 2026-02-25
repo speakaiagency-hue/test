@@ -7,6 +7,7 @@ import { randomBytes, pbkdf2Sync } from "crypto";
  */
 export async function hash(password: string, saltRounds: number): Promise<string> {
   const salt = randomBytes(16).toString("hex");
+  // Multiplica saltRounds para simular custo semelhante ao bcrypt
   const derivedKey = pbkdf2Sync(password, salt, saltRounds * 100, 64, "sha512").toString("hex");
   return `${salt}:${derivedKey}`;
 }
@@ -14,7 +15,7 @@ export async function hash(password: string, saltRounds: number): Promise<string
 /**
  * Compara uma senha com o hash armazenado.
  * @param password Senha em texto puro
- * @param hashed Hash armazenado no banco
+ * @param hashed Hash armazenado no banco (formato salt:hash)
  */
 export async function compare(password: string, hashed: string): Promise<boolean> {
   const [salt, originalHash] = hashed.split(":");
