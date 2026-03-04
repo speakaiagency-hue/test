@@ -18,10 +18,10 @@ export async function createImageService() {
         const parts: any[] = referenceImages
           .filter((img) => img?.data && img?.mimeType)
           .map((img) => ({
-            inlineData: {
+            inline_data: {
               // remove prefixo caso venha no formato data:image/png;base64,...
               data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
-              mimeType: img.mimeType,
+              mime_type: img.mimeType,
             },
           }));
 
@@ -54,9 +54,9 @@ export async function createImageService() {
           geminiResponse.candidates[0]?.content?.parts
         ) {
           for (const part of geminiResponse.candidates[0].content.parts) {
-            if (part.inlineData) {
-              const base64EncodeString: string = part.inlineData.data || "";
-              const mimeType = part.inlineData.mimeType;
+            if (part.inline_data) {
+              const base64EncodeString: string = part.inline_data.data || "";
+              const mimeType = part.inline_data.mime_type;
               images.push(`data:${mimeType};base64,${base64EncodeString}`);
             }
           }
