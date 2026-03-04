@@ -9,6 +9,7 @@ export async function createImageService() {
     async generateImage(
       prompt: string,
       aspectRatio: string = "1:1",
+      resolution: "512px" | "1K" | "2K" | "4K" = "2K",
       referenceImages: ReferenceImage[] = [] // aceita várias imagens
     ): Promise<{ images: string[]; model: string }> {
       return await rotator.executeWithRotation(async (apiKey) => {
@@ -27,16 +28,20 @@ export async function createImageService() {
 
         // Sempre adiciona o prompt no final (garantindo que não seja vazio)
         parts.push({
-          text: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
+          text: prompt?.trim() || "Uma foto hiper-realista cinematográfica e detalhada",
         });
 
         // Chamada correta para geração de imagem
         const geminiResponse = await ai.models.generateContent({
-          // Modelo atual da família Imagen 4
-          model: "imagen-4.0-generate-001",
+          // Modelos atuais de imagem (use o que estiver habilitado na sua conta)
+          model: "gemini-3.1-flash-image-preview", // ou "gemini-3-pro-image-preview"
           contents: [{ role: "user", parts }],
           config: {
-            imageConfig: { aspectRatio },
+            response_modalities: ["IMAGE"],
+            image_config: {
+              aspect_ratio: aspectRatio,
+              image_size: resolution, // "512px", "1K", "2K", "4K"
+            },
           },
           generationConfig: {
             temperature: 0.2,
@@ -66,7 +71,7 @@ export async function createImageService() {
         if (images.length > 0) {
           return {
             images,
-            model: "Imagen 4.0",
+            model: "Gemini 3.1 Flash Image",
           };
         }
 
