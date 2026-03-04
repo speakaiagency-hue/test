@@ -3,12 +3,17 @@ import { getGeminiKeyRotator } from "../utils/apiKeyRotator";
 
 export interface GenerateVideoParams {
   prompt: string;
-  mode: "text-to-video" | "image-to-video" | "reference-to-video";
+  mode: "text-to-video" | "image-to-video" | "reference-to-video" | "frame-to-video" | "extend-video";
   aspectRatio?: "16:9" | "9:16";
   resolution?: "720p" | "1080p" | "4k";
   imageBase64?: string;
   imageMimeType?: string;
   referenceImages?: Array<{ base64: string; mimeType: string }>;
+  firstFrameBase64?: string;
+  firstFrameMimeType?: string;
+  lastFrameBase64?: string;
+  lastFrameMimeType?: string;
+  extendVideoUri?: string; // vídeo anterior para extensão
 }
 
 export async function generateVideo(params: GenerateVideoParams) {
@@ -26,7 +31,7 @@ export async function generateVideo(params: GenerateVideoParams) {
 
     // Payload inicial
     const generateVideoPayload: Record<string, any> = {
-      model: "veo-3.1-generate-preview", // modelo atualizado para vídeo
+      model: "veo-3.1-generate-preview", // modelo atualizado
       config,
       prompt: params.prompt,
     };
@@ -52,6 +57,26 @@ export async function generateVideo(params: GenerateVideoParams) {
       if (referenceImagesPayload.length > 0) {
         generateVideoPayload.config.referenceImages = referenceImagesPayload;
       }
+    }
+
+    // Modo frame-to-video (primeiro e último frame)
+    if (params.mode === "frame-to-video" && params.firstFrameBase64) {
+      generateVideoPayload.image = {
+        imageBytes: params.firstFrameBase64,
+        mimeType: params.firstFrameMimeType || "image/jpeg",
+      };
+
+      if (params.lastFrameBase64) {
+        generateVideoPayload.config.lastFrame = {
+          imageBytes: params.lastFrameBase64,
+          mimeType: params.lastFrameMimeType || "image/jpeg",
+        };
+      }
+    }
+
+    // Modo extensão de vídeo
+    if (params.mode === "extend-video" && params.extendVideoUri) {
+      generateVideoPayload.video = { uri: params.extendVideoUri };
     }
 
     console.log("📤 Submetendo requisição de geração de vídeo...");
