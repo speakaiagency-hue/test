@@ -14,20 +14,23 @@ export async function createImageService() {
       return await rotator.executeWithRotation(async (apiKey) => {
         const ai = new GoogleGenAI({ apiKey });
 
-        // Monta os "parts": primeiro imagens, depois texto
-        const parts: any[] = referenceImages.map((img) => ({
-          inlineData: {
-            // remove prefixo caso venha no formato data:image/png;base64,...
-            data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
-            mimeType: img.mimeType,
-          },
-        }));
+        // Monta os "parts": primeiro imagens válidas, depois texto
+        const parts: any[] = referenceImages
+          .filter((img) => img?.data && img?.mimeType)
+          .map((img) => ({
+            inlineData: {
+              // remove prefixo caso venha no formato data:image/png;base64,...
+              data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
+              mimeType: img.mimeType,
+            },
+          }));
 
-        // Sempre adiciona o prompt no final
+        // Sempre adiciona o prompt no final (garantindo que não seja vazio)
         parts.push({
-          text: prompt || "Uma arte digital cinematográfica e detalhada", // fallback
+          text: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
         });
 
+        // Chamada correta para geração de imagem
         const geminiResponse = await ai.models.generateContent({
           model: "imagen-001:generateContent", // modelo oficial para imagens
           contents: [{ role: "user", parts }],
