@@ -26,7 +26,7 @@ export async function generateVideo(params: GenerateVideoParams) {
 
     // Payload inicial
     const generateVideoPayload: Record<string, any> = {
-      model: "veo-001:generateContent", // modelo oficial para vídeo
+      model: "veo-001", // modelo oficial para vídeo
       config,
       prompt: params.prompt,
     };
