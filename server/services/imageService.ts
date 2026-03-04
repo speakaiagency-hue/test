@@ -32,7 +32,7 @@ export async function createImageService() {
 
         // Chamada correta para geração de imagem
         const geminiResponse = await ai.models.generateContent({
-          // Modelos atuais da família Imagen 4
+          // Modelo atual da família Imagen 4
           model: "imagen-4.0-generate-001",
           contents: [{ role: "user", parts }],
           config: {
