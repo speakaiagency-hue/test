@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getGeminiKeyRotator } from "../utils/apiKeyRotator";
-import { ReferenceImage } from "../types"; // garante tipagem consistente
+import { ReferenceImage } from "../types";
 
 export async function createImageService() {
   const rotator = getGeminiKeyRotator();
@@ -10,8 +10,8 @@ export async function createImageService() {
       prompt: string,
       aspectRatio: string = "1:1",
       resolution: "512px" | "1K" | "2K" | "4K" = "2K",
-      referenceImages: ReferenceImage[] = [] // aceita várias imagens
-    ): Promise<{ images: string[]; model: string }> {
+      referenceImages: ReferenceImage[] = []
+    ): Promise<{ images: string[]; model: string; message?: string }> {
       return await rotator.executeWithRotation(async (apiKey) => {
         const ai = new GoogleGenAI({ apiKey });
 
@@ -20,27 +20,23 @@ export async function createImageService() {
           .filter((img) => img?.data && img?.mimeType)
           .map((img) => ({
             inline_data: {
-              // remove prefixo caso venha no formato data:image/png;base64,...
               data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
               mime_type: img.mimeType,
             },
           }));
 
-        // Sempre adiciona o prompt no final (garantindo que não seja vazio)
         parts.push({
           text: prompt?.trim() || "Uma foto hiper-realista cinematográfica e detalhada",
         });
 
-        // Chamada correta para geração de imagem
         const geminiResponse = await ai.models.generateContent({
-          // Modelos atuais de imagem (use o que estiver habilitado na sua conta)
           model: "gemini-3.1-flash-image-preview", // ou "gemini-3-pro-image-preview"
           contents: [{ role: "user", parts }],
           config: {
             response_modalities: ["IMAGE"],
             image_config: {
               aspect_ratio: aspectRatio,
-              image_size: resolution, // "512px", "1K", "2K", "4K"
+              image_size: resolution,
             },
           },
           generationConfig: {
@@ -50,15 +46,11 @@ export async function createImageService() {
           },
         });
 
-        // Debug opcional
         console.log("Gemini response:", JSON.stringify(geminiResponse, null, 2));
 
         const images: string[] = [];
 
-        if (
-          geminiResponse.candidates &&
-          geminiResponse.candidates[0]?.content?.parts
-        ) {
+        if (geminiResponse.candidates?.[0]?.content?.parts) {
           for (const part of geminiResponse.candidates[0].content.parts) {
             if (part.inline_data) {
               const base64EncodeString: string = part.inline_data.data || "";
@@ -75,7 +67,12 @@ export async function createImageService() {
           };
         }
 
-        throw new Error("A resposta da API não continha uma imagem.");
+        // Retorno amigável para o frontend
+        return {
+          images: [],
+          model: "Gemini 3.1 Flash Image",
+          message: "A resposta da API não continha uma imagem. Tente ajustar o prompt ou a configuração.",
+        };
       });
     },
   };
