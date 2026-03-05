@@ -23,7 +23,7 @@ const CREDIT_COSTS = {
 const VIDEO_COSTS: Record<string, number> = {
   "720p": 20,
   "1080p": 40,
-  "4k": 80,
+  "4k": 100,
 };
 
 const CREDIT_MAP: Record<string, number> = {
