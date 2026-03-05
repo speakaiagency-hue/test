@@ -157,7 +157,24 @@ export async function registerRoutes(
         referenceImages || []
       );
 
-      res.json({ ...result, creditsRemaining: deductResult.creditsRemaining });
+      // 🔑 Normaliza a resposta para sempre retornar um array de imagens
+      let images: string[] = [];
+      if (Array.isArray(result.images)) {
+        images = result.images;
+      } else if (result.imageUrl) {
+        images = [result.imageUrl];
+      } else if (result.url) {
+        images = [result.url];
+      }
+
+      if (images.length === 0) {
+        return res.status(500).json({ error: "Nenhuma imagem gerada" });
+      }
+
+      res.json({
+        images,
+        creditsRemaining: deductResult.creditsRemaining
+      });
     } catch (error) {
       console.error("Image generation error:", error);
       const message = error instanceof Error ? error.message : "Erro ao gerar imagem";
