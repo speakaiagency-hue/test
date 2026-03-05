@@ -12,11 +12,18 @@ export interface KiwifyWebhookData {
   status: string;
 }
 
+// Custos fixos para outras operações
 const CREDIT_COSTS = {
   chat: 1,
   image: 7,
   prompt: 0,
-  video: 40,
+};
+
+// Custos variáveis para vídeo conforme resolução
+const VIDEO_COSTS: Record<string, number> = {
+  "720p": 20,
+  "1080p": 40,
+  "4k": 80,
 };
 
 const CREDIT_MAP: Record<string, number> = {
@@ -123,22 +130,30 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
 
 export async function deductCredits(
   userId: string,
-  operationType: "chat" | "image" | "prompt" | "video"
+  operationType: "chat" | "image" | "prompt" | "video",
+  options?: { resolution?: string }
 ) {
   try {
-    const cost = CREDIT_COSTS[operationType];
+    let cost = CREDIT_COSTS[operationType];
+
+    // Se for vídeo, usar custo variável conforme resolução
+    if (operationType === "video") {
+      const resolution = options?.resolution ?? "1080p"; // padrão
+      cost = VIDEO_COSTS[resolution] || VIDEO_COSTS["1080p"];
+    }
+
     const currentCredits = await storage.getUserCredits(userId);
 
     if (!currentCredits || currentCredits.credits < cost) {
       return {
         success: false,
         error: "insufficient_credits",
-        message: `Você precisa de ${cost} créditos para usar ${operationType}. Compre mais créditos.`,
+        message: `Você precisa de ${cost} créditos para gerar ${operationType} em ${options?.resolution ?? "1080p"}. Compre mais créditos.`,
       };
     }
 
     const result = await storage.deductCredits(userId, cost);
-    console.log(`✅ Deduzidos ${cost} créditos para ${operationType}. Restante: ${result?.credits}`);
+    console.log(`✅ Deduzidos ${cost} créditos para ${operationType} (${options?.resolution}). Restante: ${result?.credits}`);
 
     return {
       success: true,
