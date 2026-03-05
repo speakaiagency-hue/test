@@ -40,6 +40,7 @@ function ImagePageComponent() {
       });
 
       const result = await response.json();
+      console.log("API result:", result);
 
       if (!response.ok) {
         throw new Error(result.error || "Erro ao gerar imagem");
@@ -51,6 +52,8 @@ function ImagePageComponent() {
         setGeneratedImages([result.imageUrl]);
       } else if (result.url) {
         setGeneratedImages([result.url]);
+      } else if (result.data && Array.isArray(result.data)) {
+        setGeneratedImages(result.data.map((d: any) => d.url || d.image));
       } else {
         throw new Error("Resposta da API não contém URL da imagem.");
       }
