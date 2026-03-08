@@ -21,10 +21,10 @@ function ImagePageComponent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
-  const [aspectRatio, setAspectRatio] = useState("1:1");
-  const [imageSize, setImageSize] = useState("1K");
-  const [numberOfImages, setNumberOfImages] = useState(4);
-  const [personGeneration, setPersonGeneration] = useState("allow_adult");
+  const [aspectRatio, setAspectRatio] = useState<"1:1" | "3:4" | "4:3" | "9:16" | "16:9">("1:1");
+  const [imageSize, setImageSize] = useState<"1K" | "2K">("1K");
+  const [numberOfImages, setNumberOfImages] = useState<1 | 2 | 3 | 4>(4);
+  const [personGeneration, setPersonGeneration] = useState<"dont_allow" | "allow_adult" | "allow_all">("allow_adult");
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [modelMessage, setModelMessage] = useState<string | null>(null);
@@ -105,7 +105,7 @@ function ImagePageComponent() {
               {["1:1", "3:4", "4:3", "9:16", "16:9"].map((ratio) => (
                 <button
                   key={ratio}
-                  onClick={() => setAspectRatio(ratio)}
+                  onClick={() => setAspectRatio(ratio as any)}
                   className={cn(
                     "px-4 py-1.5 rounded-lg text-sm font-medium transition-all border",
                     aspectRatio === ratio
@@ -123,7 +123,7 @@ function ImagePageComponent() {
               {["1K", "2K"].map((size) => (
                 <button
                   key={size}
-                  onClick={() => setImageSize(size)}
+                  onClick={() => setImageSize(size as any)}
                   className={cn(
                     "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
                     imageSize === size
@@ -141,7 +141,7 @@ function ImagePageComponent() {
               {[1, 2, 3, 4].map((num) => (
                 <button
                   key={num}
-                  onClick={() => setNumberOfImages(num)}
+                  onClick={() => setNumberOfImages(num as 1 | 2 | 3 | 4)}
                   className={cn(
                     "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
                     numberOfImages === num
@@ -163,7 +163,7 @@ function ImagePageComponent() {
               ].map((opt) => (
                 <button
                   key={opt.key}
-                  onClick={() => setPersonGeneration(opt.key)}
+                  onClick={() => setPersonGeneration(opt.key as any)}
                   className={cn(
                     "px-3 py-1 rounded-lg text-xs font-medium transition-all border",
                     personGeneration === opt.key
@@ -189,7 +189,7 @@ function ImagePageComponent() {
           onRemove={(id) => setReferenceImages((prev) => prev.filter((i) => i.id !== id))}
         />
 
-        {/* Action */}
+                {/* Action */}
         <Button
           className="w-full bg-[#6d28d9] hover:bg-[#5b21b6] text-white font-bold h-16 rounded-xl text-xl shadow-lg shadow-purple-900/20 transition-all duration-300 hover:scale-[1.01] flex items-center justify-center gap-3"
           onClick={handleGenerate}
@@ -202,7 +202,7 @@ function ImagePageComponent() {
           ) : (
             <>
               <span className="text-sm font-semibold px-2 py-1 rounded bg-white/20 border border-white/30">
-                {IMAGE_COST} ⚡
+                {IMAGE_COST * numberOfImages} ⚡
               </span>
               <span>Gerar Imagem</span>
             </>
@@ -210,7 +210,7 @@ function ImagePageComponent() {
         </Button>
       </div>
 
-            {/* Mensagem do modelo */}
+      {/* Mensagem do modelo */}
       {modelMessage && (
         <div className="mt-6 p-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-sm">
           {modelMessage}
