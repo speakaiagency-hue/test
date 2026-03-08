@@ -8,23 +8,28 @@ export async function createImageService() {
   return {
     async generateImage(
       prompt: string,
-      aspectRatio: string = "1:1",
-      resolution: "512px" | "0.5K" | "1K" | "2K" | "4K" = "1K",
+      aspectRatio: "1:1" | "3:4" | "4:3" | "9:16" | "16:9" = "1:1",
+      imageSize: "1K" | "2K" = "1K",
+      numberOfImages: number = 4,
+      personGeneration: "dont_allow" | "allow_adult" | "allow_all" = "allow_adult",
       referenceImages: ReferenceImage[] = []
     ): Promise<{ images: string[]; model: string; message?: string }> {
       return await rotator.executeWithRotation(async (apiKey) => {
         const ai = new GoogleGenAI({ apiKey });
 
-        // Validação de resolução
-        const validResolutions = ["512px", "0.5K", "1K", "2K", "4K"];
-        if (!validResolutions.includes(resolution)) {
-          throw new Error("Resolução inválida. Use 512px, 0.5K, 1K, 2K ou 4K.");
+        // Validação de parâmetros
+        const validAspectRatios = ["1:1", "3:4", "4:3", "9:16", "16:9"];
+        if (!validAspectRatios.includes(aspectRatio)) {
+          throw new Error("Aspect ratio inválido. Use 1:1, 3:4, 4:3, 9:16 ou 16:9.");
         }
 
-        // Validação de aspect ratio
-        const validAspectRatios = ["1:1", "16:9", "9:16", "1:4", "4:1", "1:8", "8:1"];
-        if (!validAspectRatios.includes(aspectRatio)) {
-          throw new Error("Aspect ratio inválido. Use 1:1, 16:9, 9:16, 1:4, 4:1, 1:8 ou 8:1.");
+        const validSizes = ["1K", "2K"];
+        if (!validSizes.includes(imageSize)) {
+          throw new Error("Tamanho inválido. Use 1K ou 2K.");
+        }
+
+        if (numberOfImages < 1 || numberOfImages > 4) {
+          throw new Error("Número de imagens inválido. Use entre 1 e 4.");
         }
 
         // Monta os "parts": imagens válidas
@@ -54,7 +59,9 @@ export async function createImageService() {
             response_modalities: ["IMAGE"],
             image_config: {
               aspect_ratio: aspectRatio,
-              image_size: resolution,
+              image_size: imageSize,
+              number_of_images: numberOfImages,
+              person_generation: personGeneration,
             },
           },
           generationConfig: {
