@@ -26,6 +26,7 @@ export async function createImageService() {
           .filter((img) => img?.data && img?.mimeType)
           .map((img) => ({
             inline_data: {
+              // remove prefixo caso venha no formato data:image/png;base64,...
               data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
               mime_type: img.mimeType,
             },
@@ -36,6 +37,7 @@ export async function createImageService() {
           text: prompt?.trim() || "Uma foto hiper-realista cinematográfica e detalhada",
         });
 
+        // Chamada ao modelo
         const geminiResponse = await ai.models.generateContent({
           model: "gemini-3.1-flash-image-preview", // ou "gemini-3-pro-image-preview"
           contents: [{ role: "user", parts }],
@@ -53,6 +55,7 @@ export async function createImageService() {
           },
         });
 
+        // Debug detalhado
         console.log("Gemini response:", JSON.stringify(geminiResponse, null, 2));
         console.log("Finish reason:", geminiResponse.candidates?.[0]?.finishReason);
 
