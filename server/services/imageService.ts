@@ -9,16 +9,22 @@ export async function createImageService() {
     async generateImage(
       prompt: string,
       aspectRatio: string = "1:1",
-      resolution: "512px" | "1K" | "2K" | "4K" = "2K",
+      resolution: "512px" | "0.5K" | "1K" | "2K" | "4K" = "1K",
       referenceImages: ReferenceImage[] = []
     ): Promise<{ images: string[]; model: string; message?: string }> {
       return await rotator.executeWithRotation(async (apiKey) => {
         const ai = new GoogleGenAI({ apiKey });
 
         // Validação de resolução
-        const validResolutions = ["512px", "1K", "2K", "4K"];
+        const validResolutions = ["512px", "0.5K", "1K", "2K", "4K"];
         if (!validResolutions.includes(resolution)) {
-          throw new Error("Resolução inválida. Use 512px, 1K, 2K ou 4K.");
+          throw new Error("Resolução inválida. Use 512px, 0.5K, 1K, 2K ou 4K.");
+        }
+
+        // Validação de aspect ratio
+        const validAspectRatios = ["1:1", "16:9", "9:16", "1:4", "4:1", "1:8", "8:1"];
+        if (!validAspectRatios.includes(aspectRatio)) {
+          throw new Error("Aspect ratio inválido. Use 1:1, 16:9, 9:16, 1:4, 4:1, 1:8 ou 8:1.");
         }
 
         // Monta os "parts": primeiro imagens válidas, depois texto
@@ -66,6 +72,9 @@ export async function createImageService() {
               const base64EncodeString: string = part.inline_data.data || "";
               const mimeType = part.inline_data.mime_type;
               images.push(`data:${mimeType};base64,${base64EncodeString}`);
+            } else if (part.text) {
+              // Se vier texto em vez de imagem, aproveitamos como mensagem
+              console.log("Modelo retornou texto:", part.text);
             }
           }
         }
