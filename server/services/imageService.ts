@@ -27,12 +27,11 @@ export async function createImageService() {
           throw new Error("Aspect ratio inválido. Use 1:1, 16:9, 9:16, 1:4, 4:1, 1:8 ou 8:1.");
         }
 
-        // Monta os "parts": primeiro imagens válidas
+        // Monta os "parts": imagens válidas
         const parts: any[] = referenceImages
           .filter((img) => img?.data && img?.mimeType)
           .map((img) => ({
             inline_data: {
-              // remove prefixo caso venha no formato data:image/png;base64,...
               data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
               mime_type: img.mimeType,
             },
@@ -43,9 +42,9 @@ export async function createImageService() {
           text: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
         });
 
-        // Chamada correta para geração de imagem
+        // Chamada ao modelo Gemini 3 Pro Image Preview
         const geminiResponse = await ai.models.generateContent({
-          model: "gemini-3.1-flash-image-preview", // ou "gemini-3-pro-image-preview"
+          model: "gemini-3-pro-image-preview",
           contents: [{ role: "user", parts }],
           config: {
             response_modalities: ["IMAGE"],
@@ -83,14 +82,14 @@ export async function createImageService() {
         if (images.length > 0) {
           return {
             images,
-            model: "Gemini 3.1 Flash Image",
+            model: "Gemini 3 Pro Image",
           };
         }
 
         // Retorno amigável para o frontend
         return {
           images: [],
-          model: "Gemini 3.1 Flash Image",
+          model: "Gemini 3 Pro Image",
           message: "A resposta da API não continha uma imagem. Tente ajustar o prompt ou a configuração.",
         };
       });
