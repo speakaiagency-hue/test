@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { getAuthHeader } from "@/lib/auth";
 import { withMembershipCheck } from "@/components/ProtectedGenerator";
-import { ReferenceImage } from "@/types";
+import { ReferenceImage, AspectRatio } from "@/types";
 import ReferenceUploader from "@/components/ReferenceUploader";
 
 const IMAGE_COST = 7;
@@ -21,7 +21,7 @@ function ImagePageComponent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
-  const [aspectRatio, setAspectRatio] = useState<"1:1" | "3:4" | "4:3" | "9:16" | "16:9">("16:9");
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [modelMessage, setModelMessage] = useState<string | null>(null);
@@ -34,10 +34,18 @@ function ImagePageComponent() {
 
     setIsGenerating(true);
     try {
+      // 🔑 Ajuste: enviar apenas data + mimeType
       const response = await fetch("/api/image/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeader() },
-        body: JSON.stringify({ prompt, aspectRatio, referenceImages }),
+        body: JSON.stringify({
+          prompt,
+          aspectRatio,
+          referenceImages: referenceImages.map(img => ({
+            data: img.data,
+            mimeType: img.mimeType,
+          })),
+        }),
       });
 
       const result = await response.json();
@@ -91,10 +99,10 @@ function ImagePageComponent() {
 
           <div className="flex items-end justify-between px-6 pb-4">
             <div className="flex items-center gap-2 bg-[#0f1117]">
-              {["1:1", "3:4", "4:3", "9:16", "16:9"].map((ratio) => (
+              {(["1:1", "3:4", "4:3", "9:16", "16:9"] as AspectRatio[]).map((ratio) => (
                 <button
                   key={ratio}
-                  onClick={() => setAspectRatio(ratio as any)}
+                  onClick={() => setAspectRatio(ratio)}
                   className={cn(
                     "px-4 py-1.5 rounded-lg text-sm font-medium transition-all border",
                     aspectRatio === ratio
