@@ -44,11 +44,11 @@ export async function createImageService() {
         });
 
         // Debug antes da chamada
-        console.log("Parts enviados ao Gemini:", JSON.stringify(parts, null, 2));
+        console.log("Parts enviados ao modelo:", JSON.stringify(parts, null, 2));
 
-        // Chamada ao modelo Gemini 3 Pro Image Preview
-        const geminiResponse = await ai.models.generateContent({
-          model: "gemini-3-pro-image-preview",
+        // Chamada ao modelo Imagen 4.0
+        const response = await ai.models.generateContent({
+          model: "imagen-4.0-generate-001",
           contents: [{ role: "user", parts }],
           config: {
             response_modalities: ["IMAGE"],
@@ -65,14 +65,14 @@ export async function createImageService() {
         });
 
         // Debug opcional
-        console.log("Gemini response:", JSON.stringify(geminiResponse, null, 2));
-        console.log("Finish reason:", geminiResponse.candidates?.[0]?.finishReason);
+        console.log("Imagen response:", JSON.stringify(response, null, 2));
+        console.log("Finish reason:", response.candidates?.[0]?.finishReason);
 
         const images: string[] = [];
         let message: string | undefined;
 
-        if (geminiResponse.candidates?.[0]?.content?.parts) {
-          for (const part of geminiResponse.candidates[0].content.parts) {
+        if (response.candidates?.[0]?.content?.parts) {
+          for (const part of response.candidates[0].content.parts) {
             if (part.inline_data) {
               const base64EncodeString: string = part.inline_data.data || "";
               const mimeType = part.inline_data.mime_type;
@@ -88,14 +88,14 @@ export async function createImageService() {
         if (images.length > 0) {
           return {
             images,
-            model: "Gemini 3 Pro Image",
+            model: "Imagen 4.0",
           };
         }
 
         // Retorno amigável para o frontend
         return {
           images: [],
-          model: "Gemini 3 Pro Image",
+          model: "Imagen 4.0",
           message: message || "A resposta da API não continha uma imagem. Tente ajustar o prompt ou a configuração.",
         };
       });
