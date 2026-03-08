@@ -21,7 +21,11 @@ export async function createImageService() {
       referenceImages: ReferenceImage[] = []
     ): Promise<GenerationResult> {
       return await rotator.executeWithRotation(async (apiKey) => {
-        const ai = new GoogleGenAI({ apiKey });
+        // ✅ Inicializa cliente para Vertex AI
+        const ai = new GoogleGenAI({
+          apiKey,
+          vertexai: true, // força chamadas para Vertex AI
+        });
 
         // Configuração base
         const config: Record<string, any> = {
@@ -33,7 +37,7 @@ export async function createImageService() {
 
         // Payload inicial
         const generateImagePayload: Record<string, any> = {
-          model: "gemini-2.5-flash-image",
+          model: "gemini-2.5-flash-image", // modelo Vertex AI
           prompt: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
           config,
         };
