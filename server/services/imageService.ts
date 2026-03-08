@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getGeminiKeyRotator } from "../utils/apiKeyRotator";
-import { ReferenceImage } from "../types";
+import { ReferenceImage } from "../types"; // garante tipagem consistente
 
 export async function createImageService() {
   const rotator = getGeminiKeyRotator();
@@ -10,7 +10,7 @@ export async function createImageService() {
       prompt: string,
       aspectRatio: string = "1:1",
       resolution: "512px" | "0.5K" | "1K" | "2K" | "4K" = "1K",
-      referenceImages: ReferenceImage[] = []
+      referenceImages: ReferenceImage[] = [] // aceita várias imagens
     ): Promise<{ images: string[]; model: string; message?: string }> {
       return await rotator.executeWithRotation(async (apiKey) => {
         const ai = new GoogleGenAI({ apiKey });
@@ -32,17 +32,18 @@ export async function createImageService() {
           .filter((img) => img?.data && img?.mimeType)
           .map((img) => ({
             inline_data: {
+              // remove prefixo caso venha no formato data:image/png;base64,...
               data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
               mime_type: img.mimeType,
             },
           }));
 
-        // Prompt padrão se vier vazio
+        // Sempre adiciona o prompt no final (fallback se vazio)
         parts.push({
-          text: prompt?.trim() || "Uma foto hiper-realista cinematográfica e detalhada",
+          text: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
         });
 
-        // Chamada ao modelo
+        // Chamada correta para geração de imagem
         const geminiResponse = await ai.models.generateContent({
           model: "gemini-3.1-flash-image-preview", // ou "gemini-3-pro-image-preview"
           contents: [{ role: "user", parts }],
@@ -60,7 +61,7 @@ export async function createImageService() {
           },
         });
 
-        // Debug detalhado
+        // Debug opcional
         console.log("Gemini response:", JSON.stringify(geminiResponse, null, 2));
         console.log("Finish reason:", geminiResponse.candidates?.[0]?.finishReason);
 
