@@ -18,11 +18,15 @@ const ReferenceUploader: React.FC<ReferenceUploaderProps> = ({ images, onAdd, on
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
+
+        // 🔑 Corta o prefixo "data:image/png;base64," e envia só o base64 puro
+        const base64Data = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+
         onAdd({
           id: crypto.randomUUID(),
-          data: dataUrl, // envia o DataURL completo
+          data: base64Data,   // apenas o base64 puro para o backend
           mimeType: file.type,
-          preview: dataUrl
+          preview: dataUrl    // DataURL completo para exibir no frontend
         });
       };
       reader.readAsDataURL(file);
@@ -39,7 +43,10 @@ const ReferenceUploader: React.FC<ReferenceUploaderProps> = ({ images, onAdd, on
       
       <div className="grid grid-cols-3 gap-3">
         {images.map((img) => (
-          <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+          <div
+            key={img.id}
+            className="relative group aspect-square rounded-lg overflow-hidden border border-slate-700 bg-slate-900"
+          >
             <img src={img.preview} alt="Reference" className="w-full h-full object-cover" />
             <button
               onClick={() => onRemove(img.id)}
