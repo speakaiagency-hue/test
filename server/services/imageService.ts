@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { getGeminiKeyRotator } from "../utils/apiKeyRotator";
 import {
   ReferenceImage,
@@ -20,58 +20,52 @@ export async function createImageService() {
       personGeneration: PersonGeneration = "allow_adult",
       referenceImages: ReferenceImage[] = []
     ): Promise<GenerationResult> {
-      return await rotator.executeWithRotation(async (apiKey) => {
-        // ✅ Inicializa cliente para Vertex AI
-        const ai = new GoogleGenAI({
-          apiKey,
-          vertexai: true, // força chamadas para Vertex AI
+      return await rotator.executeWithRotation(async () => {
+        // ✅ Inicializa cliente para Vertex AI (usa credenciais do Google Cloud)
+        const ai = new GoogleGenAI({ vertexai: true });
+
+        // Monta partes: imagens de referência + texto
+        const parts: any[] = [];
+
+        referenceImages.slice(0, 3).forEach((img) => {
+          parts.push({
+            inlineData: {
+              mimeType: img.mimeType || "image/jpeg",
+              data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
+            },
+          });
         });
 
-        // Configuração base
-        const config: Record<string, any> = {
-          aspectRatio,
-          imageSize,
-          numberOfImages,
-          personGeneration,
-        };
-
-        // Payload inicial
-        const generateImagePayload: Record<string, any> = {
-          model: "gemini-2.5-flash-image", // modelo Vertex AI
-          prompt: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
-          config,
-        };
-
-        // Se houver imagens de referência, adiciona no payload
-        if (referenceImages.length > 0) {
-          const refs = referenceImages.slice(0, 3).map((img) => ({
-            image: {
-              imageBytes: img.data.includes(",") ? img.data.split(",")[1] : img.data,
-              mimeType: img.mimeType || "image/jpeg",
-            },
-          }));
-          generateImagePayload.config.referenceImages = refs;
-        }
+        parts.push({
+          text: prompt?.trim() || "Uma arte digital cinematográfica e detalhada",
+        });
 
         try {
-          const response = await ai.models.generateImages(generateImagePayload);
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-image-preview", // modelo Vertex AI
+            contents: { role: "user", parts },
+            config: {
+              responseModalities: [Modality.IMAGE, Modality.TEXT],
+              imageConfig: {
+                aspectRatio,
+                imageSize,
+                numberOfImages,
+                personGeneration,
+              },
+              systemInstruction:
+                "Você é um editor de imagem profissional. Preserve a identidade do sujeito e só altere o que for explicitamente pedido.",
+            },
+          });
 
-          const images: string[] = [];
-          let message: string | undefined;
+          const imagePart = response.candidates?.[0]?.content?.parts?.find(
+            (p: any) => p.inlineData
+          );
 
-          if (response?.generatedImages?.length) {
-            for (const img of response.generatedImages) {
-              if (img?.image?.imageBytes) {
-                const base64Data = img.image.imageBytes;
-                const mimeType = img.image.mimeType || "image/png";
-                images.push(`data:${mimeType};base64,${base64Data}`);
-              }
-            }
-          }
-
-          if (images.length > 0) {
+          if (imagePart?.inlineData) {
             return {
-              images,
+              images: [
+                `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`,
+              ],
               model: "Gemini 2.5 Flash Image",
             };
           }
@@ -80,7 +74,6 @@ export async function createImageService() {
             images: [],
             model: "Gemini 2.5 Flash Image",
             message:
-              message ||
               "A resposta da API não continha uma imagem. Tente ajustar o prompt ou a configuração.",
           };
         } catch (error: any) {
