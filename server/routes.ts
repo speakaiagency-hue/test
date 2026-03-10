@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
-import { type Server } from "http";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
 import { generateVideo, type GenerateVideoParams } from "./services/geminiService";
 import { createChatService } from "./services/chatService";
 import { createPromptService } from "./services/promptService";
@@ -19,7 +20,7 @@ export async function registerRoutes(
   const promptService = await createPromptService();
   const imageService = await createImageService();
 
-  // ✅ Video Generation API (Protected)
+  // Video Generation API (Protected)
   app.post("/api/video/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -29,7 +30,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Prompt é obrigatório" });
       }
 
-      const deductResult = await deductCredits(req.user.id, "video", { resolution: params.resolution });
+      const deductResult = await deductCredits(req.user.id, "video");
       if (!deductResult.success) {
         return res.status(402).json(deductResult);
       }
@@ -43,7 +44,7 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Chat API - Send Message (Protected)
+  // Chat API - Send Message (Protected)
   app.post("/api/chat/send-message", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -72,7 +73,7 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Chat API - Generate Title
+  // Chat API - Generate Title
   app.post("/api/chat/generate-title", async (req: Request, res: Response) => {
     try {
       const { text } = req.body;
@@ -87,7 +88,7 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Chat API - Clear chat instance
+  // Chat API - Clear chat instance
   app.post("/api/chat/clear-session", async (req: Request, res: Response) => {
     try {
       const { conversationId } = req.body;
@@ -100,7 +101,7 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Prompt Generation API (Protected)
+  // Prompt Generation API (Protected)
   app.post("/api/prompt/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -129,15 +130,14 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Image Generation API (Protected)
+  // ✅ Image Generation API (Protected) corrigida para múltiplas imagens
   app.post("/api/image/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
 
-      const { prompt, aspectRatio = "1:1", resolution = "1K", referenceImages } = req.body as {
+      const { prompt, aspectRatio = "1:1", referenceImages } = req.body as {
         prompt: string;
         aspectRatio: string;
-        resolution?: string;
         referenceImages: ReferenceImage[];
       };
 
@@ -145,7 +145,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Descrição ou imagens de referência são obrigatórias" });
       }
 
-      const deductResult = await deductCredits(req.user.id, "image", { resolution });
+      const deductResult = await deductCredits(req.user.id, "image");
       if (!deductResult.success) {
         return res.status(402).json(deductResult);
       }
@@ -153,25 +153,10 @@ export async function registerRoutes(
       const result = await imageService.generateImage(
         prompt,
         aspectRatio,
-        resolution || "1K",
         referenceImages || []
       );
 
-      if (!result.images || result.images.length === 0) {
-        return res.json({
-          images: [],
-          message: result.message || "Nenhuma imagem gerada",
-          creditsRemaining: deductResult.creditsRemaining,
-          model: result.model,
-        });
-      }
-
-      res.json({
-        images: result.images,
-        message: result.message,
-        creditsRemaining: deductResult.creditsRemaining,
-        model: result.model,
-      });
+      res.json({ ...result, creditsRemaining: deductResult.creditsRemaining });
     } catch (error) {
       console.error("Image generation error:", error);
       const message = error instanceof Error ? error.message : "Erro ao gerar imagem";
