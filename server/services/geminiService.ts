@@ -5,7 +5,7 @@ export interface GenerateVideoParams {
   prompt: string;
   mode: "text-to-video" | "image-to-video" | "reference-to-video" | "frame-to-video" | "extend-video";
   aspectRatio?: "16:9" | "9:16"; // horizontal ou retrato
-  resolution: "720p" | "1080p" | "4k"; // 🚨 resolução obrigatória
+  resolution?: "720p" | "1080p" | "4k";
   imageBase64?: string;
   imageMimeType?: string;
   referenceImages?: Array<{ base64: string; mimeType: string }>;
@@ -22,15 +22,10 @@ export async function generateVideo(params: GenerateVideoParams) {
   return await rotator.executeWithRotation(async (apiKey) => {
     const ai = new GoogleGenAI({ apiKey });
 
-    // 🚨 Resolução obrigatória: se não vier, erro
-    if (!params.resolution) {
-      throw new Error("Resolução obrigatória não informada. Use 720p, 1080p ou 4k.");
-    }
-
     // Configuração base
     const config: Record<string, any> = {
       numberOfVideos: 1,
-      resolution: params.resolution,
+      resolution: params.resolution || "720p",
       aspectRatio: params.aspectRatio || "16:9",
       // Restrições: 1080p e 4k exigem duração de 8 segundos
       durationSeconds: params.resolution === "1080p" || params.resolution === "4k" ? 8 : 6,
