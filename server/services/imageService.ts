@@ -22,13 +22,18 @@ export async function createImageService() {
           : [];
 
         // Monta os "parts": primeiro imagens, depois texto
-        const parts: any[] = safeReferenceImages.map((img) => ({
-          inlineData: {
-            // remove prefixo caso venha no formato data:image/png;base64,...
-            data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
-            mimeType: img.mimeType,
-          },
-        }));
+        const parts: any[] = safeReferenceImages
+          .filter((img) => img && img.data) // garante que não seja undefined
+          .map((img) => ({
+            inlineData: {
+              // remove prefixo caso venha no formato data:image/png;base64,...
+              data:
+                typeof img.data === "string" && img.data.includes(",")
+                  ? img.data.split(",")[1]
+                  : img.data,
+              mimeType: img.mimeType || "image/png", // fallback seguro
+            },
+          }));
 
         // Sempre adiciona o prompt no final
         parts.push({
@@ -60,7 +65,7 @@ export async function createImageService() {
           for (const part of geminiResponse.candidates[0].content.parts) {
             if (part.inlineData) {
               const base64EncodeString: string = part.inlineData.data || "";
-              const mimeType = part.inlineData.mimeType;
+              const mimeType = part.inlineData.mimeType || "image/png";
               images.push(`data:${mimeType};base64,${base64EncodeString}`);
             }
           }
