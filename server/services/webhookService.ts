@@ -134,12 +134,20 @@ export async function deductCredits(
   options?: { resolution?: string }
 ) {
   try {
-    let cost = CREDIT_COSTS[operationType];
+    let cost: number;
 
-    // Se for vídeo, usar custo variável conforme resolução
     if (operationType === "video") {
-      const resolution = options?.resolution ?? "1080p"; // padrão
-      cost = VIDEO_COSTS[resolution] || VIDEO_COSTS["1080p"];
+      // 🚨 Resolução obrigatória
+      if (!options?.resolution || !VIDEO_COSTS[options.resolution]) {
+        return {
+          success: false,
+          error: "invalid_resolution",
+          message: "Resolução inválida ou não informada. Use 720p, 1080p ou 4k.",
+        };
+      }
+      cost = VIDEO_COSTS[options.resolution];
+    } else {
+      cost = CREDIT_COSTS[operationType];
     }
 
     const currentCredits = await storage.getUserCredits(userId);
@@ -148,7 +156,7 @@ export async function deductCredits(
       return {
         success: false,
         error: "insufficient_credits",
-        message: `Você precisa de ${cost} créditos para gerar ${operationType} em ${options?.resolution ?? "1080p"}. Compre mais créditos.`,
+        message: `Você precisa de ${cost} créditos para gerar ${operationType} em ${options?.resolution}. Compre mais créditos.`,
       };
     }
 
