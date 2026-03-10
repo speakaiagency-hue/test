@@ -9,31 +9,19 @@ export async function createImageService() {
     async generateImage(
       prompt: string,
       aspectRatio: string = "1:1",
-      referenceImages: ReferenceImage[] | ReferenceImage | null = [] // aceita várias ou uma imagem
+      referenceImages: ReferenceImage[] = [] // aceita várias imagens
     ): Promise<{ images: string[]; model: string }> {
       return await rotator.executeWithRotation(async (apiKey) => {
         const ai = new GoogleGenAI({ apiKey });
 
-        // Normaliza para array seguro
-        const safeReferenceImages: ReferenceImage[] = Array.isArray(referenceImages)
-          ? referenceImages
-          : referenceImages
-          ? [referenceImages]
-          : [];
-
         // Monta os "parts": primeiro imagens, depois texto
-        const parts: any[] = safeReferenceImages
-          .filter((img) => img && img.data) // garante que não seja undefined
-          .map((img) => ({
-            inlineData: {
-              // remove prefixo caso venha no formato data:image/png;base64,...
-              data:
-                typeof img.data === "string" && img.data.includes(",")
-                  ? img.data.split(",")[1]
-                  : img.data,
-              mimeType: img.mimeType || "image/png", // fallback seguro
-            },
-          }));
+        const parts: any[] = referenceImages.map((img) => ({
+          inlineData: {
+            // remove prefixo caso venha no formato data:image/png;base64,...
+            data: img.data.includes(",") ? img.data.split(",")[1] : img.data,
+            mimeType: img.mimeType,
+          },
+        }));
 
         // Sempre adiciona o prompt no final
         parts.push({
@@ -65,7 +53,7 @@ export async function createImageService() {
           for (const part of geminiResponse.candidates[0].content.parts) {
             if (part.inlineData) {
               const base64EncodeString: string = part.inlineData.data || "";
-              const mimeType = part.inlineData.mimeType || "image/png";
+              const mimeType = part.inlineData.mimeType;
               images.push(`data:${mimeType};base64,${base64EncodeString}`);
             }
           }
