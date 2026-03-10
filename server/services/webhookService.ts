@@ -138,7 +138,13 @@ export async function deductCredits(
 
     if (operationType === "video") {
       // 🚨 Normalizar resolução recebida
-      const resolution = options?.resolution?.toLowerCase().trim();
+      let resolution = options?.resolution?.toLowerCase().trim();
+
+      // Aceitar variações comuns
+      if (resolution === "1080" || resolution === "1080p") resolution = "1080p";
+      if (resolution === "720" || resolution === "720p") resolution = "720p";
+      if (resolution === "4k" || resolution === "4K") resolution = "4k";
+
       if (!resolution || !VIDEO_COSTS[resolution]) {
         return {
           success: false,
