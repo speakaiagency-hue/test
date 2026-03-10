@@ -289,19 +289,20 @@ function VideoPageComponent() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Resolução</Label>
-                <Select value={resolution} onValueChange={setResolution}>
-                  <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
-                    <SelectItem value="720p">720p (20 créditos)</SelectItem>
-                    <SelectItem value="1080p">1080p (40 créditos)</SelectItem>
-                    <SelectItem value="4k">4K (100 créditos)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+  <Label>Resolução</Label>
+  <Select value={resolution} onValueChange={setResolution}>
+    <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
+      <SelectItem value="720p">720p (20 créditos)</SelectItem>
+      <SelectItem value="1080p">1080p (40 créditos)</SelectItem>
+      <SelectItem value="4k">4k (100 créditos)</SelectItem>
+    </SelectContent>
+  </Select>
+</div>
+
             </div>
 
             {/* Botão Gerar */}
