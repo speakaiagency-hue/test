@@ -269,139 +269,154 @@ function VideoPageComponent() {
               />
             </div>
 
-            {/* Uploads condicionais */}
-            {creationMode === "image-to-video" && (
-              <div className="space-y-2">
-                <Label>Upload da Imagem</Label>
-                <div
-                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
-                  onClick={() => document.getElementById("imageUpload")?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const file = e.dataTransfer.files[0];
-                    if (file) {
-                      const fakeEvent = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
-                      handleImageUpload(fakeEvent);
-                    }
-                  }}
-                >
-                  {uploadedImage ? (
-                    <img src={uploadedImage} alt="Preview" className="mx-auto max-h-48 rounded-md" />
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                      <p className="text-gray-300">Arraste sua imagem aqui ou clique para selecionar</p>
-                    </div>
-                  )}
-                </div>
-                <input
-                  id="imageUpload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-            )}
+           {/* Uploads condicionais */}
+{creationMode === "text-to-video" && (
+  <div className="space-y-2">
+    <Label>Pré-visualização Institucional</Label>
+    <video
+      src="https://imagem.speakia.ai/wp-content/uploads/2026/01/Video-3.mp4"
+      controls
+      autoPlay
+      className="w-full rounded-md"
+    />
+    <p className="text-gray-300 text-sm mt-2">
+      Este vídeo institucional aparece como preview antes da geração.
+    </p>
+  </div>
+)}
 
-            {creationMode === "reference-to-video" && (
-              <div className="space-y-2">
-                <Label>Upload de Referências (Max 3)</Label>
-                <div
-                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
-                  onClick={() => document.getElementById("referenceUpload")?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const file = e.dataTransfer.files[0];
-                    if (file) {
-                      const fakeEvent = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
-                      handleReferenceUpload(fakeEvent);
-                    }
-                  }}
-                >
-                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                  <p className="text-gray-300">Arraste até 3 imagens ou clique</p>
-                </div>
-                <input
-                  id="referenceUpload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleReferenceUpload}
-                  className="hidden"
-                />
-                <div className="flex gap-4 mt-2">
-                  {referenceImages.map((img, idx) => (
-                    <div key={idx} className="relative">
-                      <img src={img} alt={`Ref ${idx}`} className="h-24 rounded-md" />
-                      <button
-                        onClick={() => removeReference(idx)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full px-2 py-1 text-xs"
-                      >
-                        X
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+{creationMode === "image-to-video" && (
+  <div className="space-y-2">
+    <Label>Upload da Imagem</Label>
+    <div
+      className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+      onClick={() => document.getElementById("imageUpload")?.click()}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          const fakeEvent = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
+          handleImageUpload(fakeEvent);
+        }
+      }}
+    >
+      {uploadedImage ? (
+        <img src={uploadedImage} alt="Preview" className="mx-auto max-h-48 rounded-md" />
+      ) : (
+        <div className="flex flex-col items-center">
+          <Upload className="w-8 h-8 mb-2 text-gray-400" />
+          <p className="text-gray-300">Arraste sua imagem aqui ou clique para selecionar</p>
+        </div>
+      )}
+    </div>
+    <input
+      id="imageUpload"
+      type="file"
+      accept="image/*"
+      onChange={handleImageUpload}
+      className="hidden"
+    />
+  </div>
+)}
 
-            {creationMode === "frame-to-video" && (
-              <div className="space-y-2">
-                <Label>Upload do Primeiro Frame</Label>
-                <div
-                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
-                  onClick={() => document.getElementById("firstFrameUpload")?.click()}
-                >
-                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                  <p className="text-gray-300">Clique ou arraste o primeiro frame</p>
-                </div>
-                <input
-                  id="firstFrameUpload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFirstFrameUpload}
-                  className="hidden"
-                />
+{creationMode === "reference-to-video" && (
+  <div className="space-y-2">
+    <Label>Upload de Referências (Max 3)</Label>
+    <div
+      className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+      onClick={() => document.getElementById("referenceUpload")?.click()}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          const fakeEvent = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
+          handleReferenceUpload(fakeEvent);
+        }
+      }}
+    >
+      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+      <p className="text-gray-300">Arraste até 3 imagens ou clique</p>
+    </div>
+    <input
+      id="referenceUpload"
+      type="file"
+      accept="image/*"
+      onChange={handleReferenceUpload}
+      className="hidden"
+    />
+    <div className="flex gap-4 mt-2">
+      {referenceImages.map((img, idx) => (
+        <div key={idx} className="relative">
+          <img src={img} alt={`Ref ${idx}`} className="h-24 rounded-md" />
+          <button
+            onClick={() => removeReference(idx)}
+            className="absolute top-1 right-1 bg-red-600 text-white rounded-full px-2 py-1 text-xs"
+          >
+            X
+          </button>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
-                <Label>Upload do Último Frame (opcional)</Label>
-                <div
-                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
-                  onClick={() => document.getElementById("lastFrameUpload")?.click()}
-                >
-                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                  <p className="text-gray-300">Clique ou arraste o último frame</p>
-                </div>
-                <input
-                  id="lastFrameUpload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLastFrameUpload}
-                  className="hidden"
-                />
-              </div>
-            )}
+{creationMode === "frame-to-video" && (
+  <div className="space-y-2">
+    <Label>Upload do Primeiro Frame</Label>
+    <div
+      className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+      onClick={() => document.getElementById("firstFrameUpload")?.click()}
+    >
+      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+      <p className="text-gray-300">Clique ou arraste o primeiro frame</p>
+    </div>
+    <input
+      id="firstFrameUpload"
+      type="file"
+      accept="image/*"
+      onChange={handleFirstFrameUpload}
+      className="hidden"
+    />
 
-            {creationMode === "extend-video" && (
-              <div className="space-y-2">
-                <Label>Upload do Vídeo Anterior</Label>
-                <div
-                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
-                  onClick={() => document.getElementById("extendVideoUpload")?.click()}
-                >
-                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
-                  <p className="text-gray-300">Clique ou arraste o vídeo</p>
-                </div>
-                <input
-                  id="extendVideoUpload"
-                  type="file"
-                  accept="video/*"
-                  onChange={handleExtendVideoUpload}
-                  className="hidden"
-                />
-              </div>
-            )}
+    <Label>Upload do Último Frame (opcional)</Label>
+    <div
+      className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+      onClick={() => document.getElementById("lastFrameUpload")?.click()}
+    >
+      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+      <p className="text-gray-300">Clique ou arraste o último frame</p>
+    </div>
+    <input
+      id="lastFrameUpload"
+      type="file"
+      accept="image/*"
+      onChange={handleLastFrameUpload}
+      className="hidden"
+    />
+  </div>
+)}
+
+{creationMode === "extend-video" && (
+  <div className="space-y-2">
+    <Label>Upload do Vídeo Anterior</Label>
+    <div
+      className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+      onClick={() => document.getElementById("extendVideoUpload")?.click()}
+    >
+      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+      <p className="text-gray-300">Clique ou arraste o vídeo</p>
+    </div>
+    <input
+      id="extendVideoUpload"
+      type="file"
+      accept="video/*"
+      onChange={handleExtendVideoUpload}
+      className="hidden"
+    />
+  </div>
+)}
 
                        {/* Formato e Resolução */}
             <div className="grid grid-cols-2 gap-4">
