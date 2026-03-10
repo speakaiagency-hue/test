@@ -27,23 +27,20 @@ const VIDEO_COSTS: Record<string, number> = {
 };
 
 const CREDIT_MAP: Record<string, number> = {
-  // Links curtos (checkout_link)
   "97ObxqK": 100,
   "3gpZJ6N": 200,
   "M2XmJF7": 300,
   "ntcPS8x": 500,
   "Tqy289G": 1000,
   "f8d7PdX": 2000,
-  "8IDayIy": 500,    // Plano Básico
-  "QnHmsQm": 1500,   // Plano Pro
-  "hOJ3bEi": 5000,   // Plano Premium
+  "8IDayIy": 500,
+  "QnHmsQm": 1500,
+  "hOJ3bEi": 5000,
 
-  // UUIDs internos (product_id)
-  "57c511c0-05d2-11f1-a5d8-9909e220e83a": 2000,  // Produto de Créditos
-  "f1e06ef0-05d0-11f1-b57c-c9aa21f3f207": 5000,  // Produto de Planos
+  "57c511c0-05d2-11f1-a5d8-9909e220e83a": 2000,
+  "f1e06ef0-05d0-11f1-b57c-c9aa21f3f207": 5000,
 };
 
-// Senha padrão para usuários criados automaticamente
 const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "Speak123";
 
 export async function verifyKiwifySignature(payload: string, signature: string): Promise<boolean> {
@@ -62,7 +59,6 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
       return { success: false, message: "Compra não aprovada" };
     }
 
-    // 🔑 Identificar produto
     let productKey: string | undefined;
     if (data.checkout_link && CREDIT_MAP[data.checkout_link]) {
       productKey = data.checkout_link;
@@ -76,35 +72,26 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
       return { success: false, message: "Produto não reconhecido" };
     }
 
-    // 🔎 Evitar duplicatas
     const alreadyProcessed = await storage.hasProcessedPurchase(data.purchase_id);
     if (alreadyProcessed) {
       console.log(`ℹ️ Compra ${data.purchase_id} já processada, ignorando duplicata.`);
-      return {
-        success: true,
-        message: "Compra já processada",
-        creditsAdded: 0,
-      };
+      return { success: true, message: "Compra já processada", creditsAdded: 0 };
     }
 
-    // 🔎 Normalizar email
     const normalizedEmail = data.customer_email.toLowerCase();
     let user = await storage.getUserByEmail(normalizedEmail);
 
     if (!user) {
-      // ✅ Criar usuário automático com senha padrão
       console.log(`🆕 Criando usuário automático para ${normalizedEmail}`);
       user = await storage.createUser({
         email: normalizedEmail,
         name: data.customer_name,
-        password: DEFAULT_PASSWORD, // senha padrão
+        password: DEFAULT_PASSWORD,
       });
     }
 
-    // ✅ Adicionar créditos ao usuário
     await storage.addCredits(user.id, creditsToAdd, data.purchase_id);
 
-    // 🔎 Log do evento
     await storage.logWebhookEvent(
       data.purchase_id,
       user.id,
@@ -116,12 +103,7 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
 
     console.log(`✅ Compra processada: ${creditsToAdd} créditos adicionados para ${user.email} (ID: ${user.id})`);
 
-    return {
-      success: true,
-      message: `${creditsToAdd} créditos adicionados`,
-      userId: user.id,
-      creditsAdded: creditsToAdd,
-    };
+    return { success: true, message: `${creditsToAdd} créditos adicionados`, userId: user.id, creditsAdded: creditsToAdd };
   } catch (error) {
     console.error("🔥 Erro ao processar compra:", error);
     return { success: false, message: "Erro ao processar compra" };
@@ -134,12 +116,24 @@ export async function deductCredits(
   options?: { resolution?: string }
 ) {
   try {
-    let cost = CREDIT_COSTS[operationType];
+    let cost: number;
 
-    // Se for vídeo, usar custo variável conforme resolução
     if (operationType === "video") {
-      const resolution = options?.resolution ?? "1080p"; // padrão
-      cost = VIDEO_COSTS[resolution] || VIDEO_COSTS["1080p"];
+      let resolution = (options?.resolution || "1080p").toLowerCase().trim();
+
+      // Normalizar variações comuns
+      if (resolution.startsWith("1080")) resolution = "1080p";
+      else if (resolution.startsWith("720")) resolution = "720p";
+      else if (resolution.includes("4")) resolution = "4k";
+
+      if (!VIDEO_COSTS[resolution]) {
+        resolution = "1080p"; // fallback final
+      }
+
+      cost = VIDEO_COSTS[resolution];
+      console.log(`🎬 Resolução usada: ${resolution}, custo: ${cost}`);
+    } else {
+      cost = CREDIT_COSTS[operationType];
     }
 
     const currentCredits = await storage.getUserCredits(userId);
@@ -153,13 +147,9 @@ export async function deductCredits(
     }
 
     const result = await storage.deductCredits(userId, cost);
-    console.log(`✅ Deduzidos ${cost} créditos para ${operationType} (${options?.resolution}). Restante: ${result?.credits}`);
+    console.log(`✅ Deduzidos ${cost} créditos para ${operationType} (${options?.resolution ?? "1080p"}). Restante: ${result?.credits}`);
 
-    return {
-      success: true,
-      creditsRemaining: result?.credits ?? currentCredits.credits - cost,
-      cost,
-    };
+    return { success: true, creditsRemaining: result?.credits ?? currentCredits.credits - cost, cost };
   } catch (error) {
     console.error("🔥 Erro ao descontar créditos:", error);
     return { success: false, message: "Erro ao descontar créditos" };
