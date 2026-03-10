@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { getGeminiKeyRotator } from "../utils/apiKeyRotator";
+import { getGeminiKeyRotator } from "../utils/ImagemRotator.ts";
 import { ReferenceImage } from "../types"; // garante tipagem consistente
 
 export async function createImageService() {
