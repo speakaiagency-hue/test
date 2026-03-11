@@ -26,6 +26,7 @@ const VIDEO_COSTS: Record<string, number> = {
   "4k": 100,
 };
 
+// Mapeamento de produtos → créditos
 const CREDIT_MAP: Record<string, number> = {
   "97ObxqK": 100,
   "3gpZJ6N": 200,
