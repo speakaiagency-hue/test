@@ -31,8 +31,14 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Prompt é obrigatório" });
       }
 
+      // Dedução de créditos com base na resolução
+      const deductResult = await deductCredits(req.user.id, "video", { resolution: params.resolution });
+      if (!deductResult.success) {
+        return res.status(402).json(deductResult);
+      }
+
       const result = await generateVideoByResolution(req.user.id, params);
-      res.json(result);
+      res.json({ ...result, creditsRemaining: deductResult.creditsRemaining });
     } catch (error) {
       console.error("Video generation error:", error);
       const message = error instanceof Error ? error.message : "Erro ao gerar vídeo";
