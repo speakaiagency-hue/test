@@ -201,7 +201,7 @@ function VideoPageComponent() {
     }
   };
 
-  return (
+    return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex-1">
@@ -211,7 +211,7 @@ function VideoPageComponent() {
             </span>
             Geração de Vídeo
           </h1>
-                  <p className="text-muted-foreground">
+          <p className="text-muted-foreground">
             Crie vídeos cinematográficos a partir de texto ou imagens.
           </p>
         </div>
