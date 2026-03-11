@@ -28,10 +28,13 @@ export async function generateVideoByResolution(
   userId: string,
   params: GenerateVideoParams
 ) {
-  if (!params.resolution) {
+  const { resolution } = params;
+
+  if (!resolution) {
     throw new Error("Resolução não informada no payload");
   }
 
-  const generator = getVideoService(params.resolution as Resolution);
-  return generator(userId, params);
+  const generator = getVideoService(resolution as Resolution);
+  // Aqui garantimos que a resolução seja passada corretamente
+  return generator(userId, { ...params, resolution });
 }
