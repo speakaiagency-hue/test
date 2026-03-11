@@ -18,6 +18,13 @@ export interface GenerateVideoParams {
   extendVideoUri?: string;
 }
 
+/**
+ * Função base para geração de vídeos
+ * - Recebe parâmetros genéricos
+ * - Deduz créditos conforme resolução
+ * - Chama a API Gemini
+ * - Retorna URL do vídeo e informações de créditos
+ */
 export async function generateVideo(userId: string, params: GenerateVideoParams) {
   // 🔎 Deduz créditos conforme resolução
   const creditResult = await deductCredits(userId, "video", { resolution: params.resolution });
@@ -85,7 +92,7 @@ export async function generateVideo(userId: string, params: GenerateVideoParams)
     // Modo extensão de vídeo
     if (params.mode === "extend-video" && params.extendVideoUri) {
       generateVideoPayload.video = { uri: params.extendVideoUri };
-      generateVideoPayload.config.resolution = "720p";
+      generateVideoPayload.config.resolution = "720p"; // extensão sempre em 720p
       generateVideoPayload.config.durationSeconds = 8;
     }
 
