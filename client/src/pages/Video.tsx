@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Video, Film, Upload, ArrowRight, X, Plus } from "lucide-react";
+import { Video, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,15 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthHeader } from "@/lib/auth";
 import { withMembershipCheck } from "@/components/ProtectedGenerator";
 
-const VIDEO_COST = 40;
+const VIDEO_COSTS: Record<string, number> = {
+  "720p": 20,
+  "1080p": 40,
+  "4k": 100,
+};
+
+const getVideoCost = (resolution: string) => {
+  return VIDEO_COSTS[resolution] || 40;
+};
 
 interface ImageData {
   base64: string;
@@ -47,6 +55,75 @@ function VideoPageComponent() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const base64 = await fileToBase64(file);
+        const url = URL.createObjectURL(file);
+        setUploadedImage(url);
+        setUploadedImageData({ base64, mimeType: file.type, file });
+        toast({ title: "Arquivo carregado com sucesso!" });
+      } catch {
+        toast({ title: "Erro ao carregar arquivo", variant: "destructive" });
+      }
+    }
+  };
+
+  const handleReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (referenceImages.length >= 3) {
+        toast({ title: "Máximo de 3 imagens permitidas", variant: "destructive" });
+        return;
+      }
+      try {
+        const base64 = await fileToBase64(file);
+        const url = URL.createObjectURL(file);
+        setReferenceImages([...referenceImages, url]);
+        setReferenceImagesData([...referenceImagesData, { base64, mimeType: file.type, file }]);
+        toast({ title: "Referência adicionada!" });
+      } catch {
+        toast({ title: "Erro ao carregar arquivo", variant: "destructive" });
+      }
+    }
+  };
+
+  const removeReference = (index: number) => {
+    const newImages = [...referenceImages];
+    newImages.splice(index, 1);
+    setReferenceImages(newImages);
+    const newData = [...referenceImagesData];
+    newData.splice(index, 1);
+    setReferenceImagesData(newData);
+  };
+
+  const handleFirstFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const base64 = await fileToBase64(file);
+      setFirstFrame({ base64, mimeType: file.type, file });
+      toast({ title: "Primeiro frame carregado!" });
+    }
+  };
+
+  const handleLastFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const base64 = await fileToBase64(file);
+      setLastFrame({ base64, mimeType: file.type, file });
+      toast({ title: "Último frame carregado!" });
+    }
+  };
+
+  const handleExtendVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setExtendVideoFile(file);
+      toast({ title: "Vídeo anterior carregado!" });
+    }
   };
 
   const handleGenerate = async () => {
@@ -124,75 +201,6 @@ function VideoPageComponent() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const base64 = await fileToBase64(file);
-        const url = URL.createObjectURL(file);
-        setUploadedImage(url);
-        setUploadedImageData({ base64, mimeType: file.type, file });
-        toast({ title: "Arquivo carregado com sucesso!" });
-      } catch {
-        toast({ title: "Erro ao carregar arquivo", variant: "destructive" });
-      }
-    }
-  };
-
-  const handleReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (referenceImages.length >= 3) {
-        toast({ title: "Máximo de 3 imagens permitidas", variant: "destructive" });
-        return;
-      }
-      try {
-        const base64 = await fileToBase64(file);
-        const url = URL.createObjectURL(file);
-        setReferenceImages([...referenceImages, url]);
-        setReferenceImagesData([...referenceImagesData, { base64, mimeType: file.type, file }]);
-        toast({ title: "Referência adicionada!" });
-      } catch {
-        toast({ title: "Erro ao carregar arquivo", variant: "destructive" });
-      }
-    }
-  };
-
-  const removeReference = (index: number) => {
-    const newImages = [...referenceImages];
-    newImages.splice(index, 1);
-    setReferenceImages(newImages);
-    const newData = [...referenceImagesData];
-    newData.splice(index, 1);
-    setReferenceImagesData(newData);
-  };
-
-  const handleFirstFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const base64 = await fileToBase64(file);
-      setFirstFrame({ base64, mimeType: file.type, file });
-      toast({ title: "Primeiro frame carregado!" });
-    }
-  };
-
-  const handleLastFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const base64 = await fileToBase64(file);
-      setLastFrame({ base64, mimeType: file.type, file });
-      toast({ title: "Último frame carregado!" });
-    }
-  };
-
-   const handleExtendVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setExtendVideoFile(file);
-      toast({ title: "Vídeo anterior carregado!" });
-    }
-  };
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
@@ -203,7 +211,7 @@ function VideoPageComponent() {
             </span>
             Geração de Vídeo
           </h1>
-          <p className="text-muted-foreground">
+                  <p className="text-muted-foreground">
             Crie vídeos cinematográficos a partir de texto ou imagens.
           </p>
         </div>
@@ -265,40 +273,137 @@ function VideoPageComponent() {
             {creationMode === "image-to-video" && (
               <div className="space-y-2">
                 <Label>Upload da Imagem</Label>
-                <input type="file" accept="image/*" onChange={handleImageUpload} />
+                <div
+                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+                  onClick={() => document.getElementById("imageUpload")?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file) {
+                      const fakeEvent = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
+                      handleImageUpload(fakeEvent);
+                    }
+                  }}
+                >
+                  {uploadedImage ? (
+                    <img src={uploadedImage} alt="Preview" className="mx-auto max-h-48 rounded-md" />
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                      <p className="text-gray-300">Arraste sua imagem aqui ou clique para selecionar</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="imageUpload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
               </div>
             )}
 
             {creationMode === "reference-to-video" && (
               <div className="space-y-2">
                 <Label>Upload de Referências (Max 3)</Label>
-                <input type="file" accept="image/*" onChange={handleReferenceUpload} />
-                {referenceImages.map((img, idx) => (
-                  <div key={idx} className="relative">
-                    <img src={img} alt={`Ref ${idx}`} />
-                    <button onClick={() => removeReference(idx)}>Remover</button>
-                  </div>
-                ))}
+                <div
+                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+                  onClick={() => document.getElementById("referenceUpload")?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file) {
+                      const fakeEvent = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
+                      handleReferenceUpload(fakeEvent);
+                    }
+                  }}
+                >
+                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                  <p className="text-gray-300">Arraste até 3 imagens ou clique</p>
+                </div>
+                <input
+                  id="referenceUpload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleReferenceUpload}
+                  className="hidden"
+                />
+                <div className="flex gap-4 mt-2">
+                  {referenceImages.map((img, idx) => (
+                    <div key={idx} className="relative">
+                      <img src={img} alt={`Ref ${idx}`} className="h-24 rounded-md" />
+                      <button
+                        onClick={() => removeReference(idx)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full px-2 py-1 text-xs"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {creationMode === "frame-to-video" && (
               <div className="space-y-2">
                 <Label>Upload do Primeiro Frame</Label>
-                <input type="file" accept="image/*" onChange={handleFirstFrameUpload} />
+                <div
+                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+                  onClick={() => document.getElementById("firstFrameUpload")?.click()}
+                >
+                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                  <p className="text-gray-300">Clique ou arraste o primeiro frame</p>
+                </div>
+                <input
+                  id="firstFrameUpload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFirstFrameUpload}
+                  className="hidden"
+                />
+
                 <Label>Upload do Último Frame (opcional)</Label>
-                <input type="file" accept="image/*" onChange={handleLastFrameUpload} />
+                <div
+                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+                  onClick={() => document.getElementById("lastFrameUpload")?.click()}
+                >
+                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                  <p className="text-gray-300">Clique ou arraste o último frame</p>
+                </div>
+                <input
+                  id="lastFrameUpload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLastFrameUpload}
+                  className="hidden"
+                />
               </div>
             )}
 
             {creationMode === "extend-video" && (
               <div className="space-y-2">
                 <Label>Upload do Vídeo Anterior</Label>
-                <input type="file" accept="video/*" onChange={handleExtendVideoUpload} />
+                <div
+                  className="border-2 border-dashed border-gray-500 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-800 transition"
+                  onClick={() => document.getElementById("extendVideoUpload")?.click()}
+                >
+                  <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                  <p className="text-gray-300">Clique ou arraste o vídeo</p>
+                </div>
+                <input
+                  id="extendVideoUpload"
+                  type="file"
+                  accept="video/*"
+                  onChange={handleExtendVideoUpload}
+                  className="hidden"
+                />
               </div>
             )}
 
-            {/* Formato e Resolução */}
+                       {/* Formato e Resolução */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Formato</Label>
@@ -321,6 +426,7 @@ function VideoPageComponent() {
                   <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
                     <SelectItem value="720p">720p</SelectItem>
                     <SelectItem value="1080p">1080p</SelectItem>
+                    <SelectItem value="4k">4K</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -332,7 +438,7 @@ function VideoPageComponent() {
               onClick={handleGenerate}
               disabled={isGenerating}
             >
-              {isGenerating ? "Gerando..." : `${VIDEO_COST} ⚡ Gerar`}
+              {isGenerating ? "Gerando..." : `${getVideoCost(resolution)} ⚡ Gerar`}
             </Button>
           </CardContent>
         </Card>
