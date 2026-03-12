@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Video } from "lucide-react";
+import { Video, Film, Upload, ArrowRight, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,7 +73,12 @@ function VideoPageComponent() {
 
     setIsGenerating(true);
     try {
-      const payload: any = { prompt, mode: creationMode, aspectRatio, resolution };
+      const payload: any = {
+        prompt,
+        mode: creationMode,
+        aspectRatio,
+        resolution,
+      };
 
       if (creationMode === "image-to-video" && uploadedImageData) {
         payload.imageBase64 = uploadedImageData.base64;
@@ -180,7 +185,7 @@ function VideoPageComponent() {
     }
   };
 
-  const handleExtendVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleExtendVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setExtendVideoFile(file);
@@ -190,10 +195,72 @@ function VideoPageComponent() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
+            <span className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+              <Video className="w-6 h-6" />
+            </span>
+            Geração de Vídeo
+          </h1>
+          <p className="text-muted-foreground">
+            Crie vídeos cinematográficos a partir de texto ou imagens.
+          </p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Controls */}
+        {/* Controls */}
         <Card className="lg:col-span-5 border-border/50 shadow-xl bg-[#0f1117] border-[#1f2937] h-fit overflow-hidden">
           <CardContent className="p-6 space-y-6">
+            {/* Modo de Criação */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Modo de Criação
+              </Label>
+              <Select
+                value={creationMode}
+                onValueChange={(val) => {
+                  setCreationMode(val as any);
+                  setUploadedImage(null);
+                  setReferenceImages([]);
+                }}
+              >
+                <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg focus:ring-indigo-500/50">
+                  <SelectValue placeholder="Selecione o modo" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
+                  <SelectItem value="text-to-video">Texto para Vídeo</SelectItem>
+                  <SelectItem value="image-to-video">Imagem para Vídeo</SelectItem>
+                  <SelectItem value="reference-to-video">Referências para Vídeo</SelectItem>
+                  <SelectItem value="frame-to-video">Frames para Vídeo</SelectItem>
+                  <SelectItem value="extend-video">Extensão de Vídeo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Prompt */}
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {creationMode === "text-to-video"
+                  ? "Prompt"
+                  : creationMode === "image-to-video"
+                  ? "Descreva o que deve acontecer no vídeo"
+                  : creationMode === "reference-to-video"
+                  ? "Descreva o vídeo baseado nas referências"
+                  : creationMode === "frame-to-video"
+                  ? "Descreva o vídeo entre os frames"
+                  : "Descreva como o vídeo deve continuar"}
+              </Label>
+              <Textarea
+                ref={textareaRef}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Descreva o vídeo que você quer criar..."
+                className="h-32 resize-none bg-[#1a1d24] border-[#2d3748] text-foreground rounded-lg focus:ring-indigo-500/50 placeholder:text-muted-foreground/50 p-4"
+              />
+            </div>
+
             {/* Uploads condicionais */}
             {creationMode === "image-to-video" && (
               <div className="space-y-2">
@@ -254,6 +321,7 @@ function VideoPageComponent() {
                   <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
                     <SelectItem value="720p">720p</SelectItem>
                     <SelectItem value="1080p">1080p</SelectItem>
+                    <SelectItem value="4k">4K</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -267,9 +335,6 @@ function VideoPageComponent() {
             >
               {isGenerating ? "Gerando..." : `${VIDEO_COST} ⚡ Gerar`}
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Cada geração consome {VIDEO_COST} créditos
-            </p>
           </CardContent>
         </Card>
 
@@ -277,13 +342,7 @@ function VideoPageComponent() {
         <div className="lg:col-span-7 space-y-6">
           <div className="aspect-video rounded-2xl overflow-hidden bg-black border shadow-2xl relative">
             {videoUrl ? (
-              <video
-                src={videoUrl}
-                className="w-full h-full object-cover rounded-lg"
-                controls
-                autoPlay
-                loop
-              />
+              <video src={videoUrl} className="w-full h-full object-cover rounded-lg" controls autoPlay loop />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground">
                 {isGenerating ? "Criando sua obra-prima..." : "Preview do Vídeo"}
