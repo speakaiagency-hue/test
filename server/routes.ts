@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { generateVideo, type GenerateVideoParams } from "./services/videoService";
-import { generateVideo as generate4kVideo, type GenerateVideoParams as Generate4kVideoParams } from "./services/4kvideoService";
+import { generateVideo, type GenerateVideoParams } from "./services/4kvideoService";
 import { createChatService } from "./services/chatService";
 import { createPromptService } from "./services/promptService";
 import { createImageService } from "./services/imageService";
