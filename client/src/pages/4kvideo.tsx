@@ -33,7 +33,7 @@ function VideoPageComponent() {
   const [extendVideoFile, setExtendVideoFile] = useState<File | null>(null);
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [resolution, setResolution] = useState("720p");
+const [resolution, setResolution] = useState("4k");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fileToBase64 = (file: File): Promise<string> => {
