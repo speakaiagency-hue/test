@@ -1,13 +1,11 @@
 import { GoogleGenAI, VideoGenerationReferenceType } from "@google/genai";
 import { getGeminiKeyRotator } from "../utils/apiKeyRotator";
-import { deductCredits } from "./WebhookService";
-import { storage } from "../storage";
 
 export interface GenerateVideoParams {
   prompt: string;
   mode: "text-to-video" | "image-to-video" | "reference-to-video" | "frame-to-video" | "extend-video";
-  aspectRatio?: "16:9" | "9:16";
-  resolution?: "4k"; // ✅ apenas 4K
+  aspectRatio?: "16:9" | "9:16"; // horizontal ou retrato
+  resolution?: "720p" | "1080p" | "4k";
   imageBase64?: string;
   imageMimeType?: string;
   referenceImages?: Array<{ base64: string; mimeType: string }>;
@@ -15,39 +13,32 @@ export interface GenerateVideoParams {
   firstFrameMimeType?: string;
   lastFrameBase64?: string;
   lastFrameMimeType?: string;
-  extendVideoUri?: string;
+  extendVideoUri?: string; // vídeo anterior para extensão
 }
 
-export async function generateVideo(userId: string, params: GenerateVideoParams) {
-  // 🔎 Deduz créditos conforme resolução (fixo 4K)
-  const creditResult = await deductCredits(userId, "video", { resolution: "4k" });
-
-  if (!creditResult.success) {
-    return {
-      success: false,
-      error: creditResult.error,
-      message: creditResult.message,
-    };
-  }
-
+export async function generateVideo(params: GenerateVideoParams) {
   const rotator = getGeminiKeyRotator();
 
   return await rotator.executeWithRotation(async (apiKey) => {
     const ai = new GoogleGenAI({ apiKey });
 
+    // Configuração base
     const config: Record<string, any> = {
       numberOfVideos: 1,
-      resolution: "4k", // ✅ sempre 4K
+      resolution: params.resolution || "720p",
       aspectRatio: params.aspectRatio || "16:9",
-      durationSeconds: 10, // ✅ duração fixa para 4K
+      // Restrições: 1080p e 4k exigem duração de 8 segundos
+      durationSeconds: params.resolution === "1080p" || params.resolution === "4k" ? 8 : 6,
     };
 
+    // Payload inicial
     const generateVideoPayload: Record<string, any> = {
-      model: "veo-3.1-generate-preview",
+      model: "veo-3.1-generate-preview", // modelo atualizado
       config,
       prompt: params.prompt,
     };
 
+    // Modo imagem → vídeo
     if (params.mode === "image-to-video" && params.imageBase64) {
       generateVideoPayload.image = {
         imageBytes: params.imageBase64,
@@ -55,6 +46,7 @@ export async function generateVideo(userId: string, params: GenerateVideoParams)
       };
     }
 
+    // Modo referência → vídeo (até 3 imagens)
     if (params.mode === "reference-to-video" && params.referenceImages?.length) {
       const referenceImagesPayload = params.referenceImages.slice(0, 3).map((img) => ({
         image: {
@@ -63,14 +55,19 @@ export async function generateVideo(userId: string, params: GenerateVideoParams)
         },
         referenceType: VideoGenerationReferenceType.ASSET,
       }));
-      generateVideoPayload.config.referenceImages = referenceImagesPayload;
+
+      if (referenceImagesPayload.length > 0) {
+        generateVideoPayload.config.referenceImages = referenceImagesPayload;
+      }
     }
 
+    // Modo frame-to-video (primeiro e último frame)
     if (params.mode === "frame-to-video" && params.firstFrameBase64) {
       generateVideoPayload.image = {
         imageBytes: params.firstFrameBase64,
         mimeType: params.firstFrameMimeType || "image/jpeg",
       };
+
       if (params.lastFrameBase64) {
         generateVideoPayload.config.lastFrame = {
           imageBytes: params.lastFrameBase64,
@@ -79,25 +76,35 @@ export async function generateVideo(userId: string, params: GenerateVideoParams)
       }
     }
 
+    // Modo extensão de vídeo
     if (params.mode === "extend-video" && params.extendVideoUri) {
       generateVideoPayload.video = { uri: params.extendVideoUri };
-      generateVideoPayload.config.resolution = "4k"; // ✅ extensão também em 4K
-      generateVideoPayload.config.durationSeconds = 10;
+      // extensão só funciona em 720p
+      generateVideoPayload.config.resolution = "720p";
+      generateVideoPayload.config.durationSeconds = 8;
     }
 
     console.log("📤 Submetendo requisição de geração de vídeo...");
     let operation = await ai.models.generateVideos(generateVideoPayload);
 
+    // Polling até terminar
     while (!operation.done) {
       await new Promise((resolve) => setTimeout(resolve, 10000));
       console.log("⏳ Gerando vídeo...");
       operation = await ai.operations.getVideosOperation({ operation });
     }
 
+    // Tratamento da resposta
     if (operation?.response) {
       const videos = operation.response.generatedVideos;
+
       if (!videos || videos.length === 0) {
-        throw new Error(operation.error ? JSON.stringify(operation.error) : "Nenhum vídeo foi gerado");
+        const errorMsg =
+          operation.error &&
+          (typeof operation.error === "string"
+            ? operation.error
+            : JSON.stringify(operation.error));
+        throw new Error(errorMsg || "Nenhum vídeo foi gerado");
       }
 
       const firstVideo = videos[0];
@@ -116,17 +123,18 @@ export async function generateVideo(userId: string, params: GenerateVideoParams)
       url.searchParams.set("key", apiKey);
       const finalUrl = url.toString();
 
-      // 🔎 Logar evento corretamente
-      await storage.logVideoGeneration(userId, params, { url: finalUrl });
-
       return {
-        success: true,
         videoUrl: finalUrl,
-        creditsRemaining: creditResult.creditsRemaining,
-        cost: creditResult.cost,
+        uri: finalUrl,
       };
     }
 
-    throw new Error(operation.error ? JSON.stringify(operation.error) : "Nenhum vídeo foi gerado");
+    // Caso erro
+    const errorMsg =
+      operation.error &&
+      (typeof operation.error === "string"
+        ? operation.error
+        : JSON.stringify(operation.error));
+    throw new Error(errorMsg || "Nenhum vídeo foi gerado");
   });
 }
