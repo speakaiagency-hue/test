@@ -1,8 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { generateVideoByResolution } from "./services/VideoServiceSelector";
-import { type GenerateVideoParams } from "./services/GeminiServiceBase";
+import { generateVideo, type GenerateVideoParams } from "./services/geminiService";
 import { createChatService } from "./services/chatService";
 import { createPromptService } from "./services/promptService";
 import { createImageService } from "./services/imageService";
@@ -21,7 +20,7 @@ export async function registerRoutes(
   const promptService = await createPromptService();
   const imageService = await createImageService();
 
-  // ✅ Video Generation API (Protected)
+  // Video Generation API (Protected)
   app.post("/api/video/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -31,13 +30,12 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Prompt é obrigatório" });
       }
 
-      // Dedução de créditos com base na resolução
-      const deductResult = await deductCredits(req.user.id, "video", { resolution: params.resolution });
+      const deductResult = await deductCredits(req.user.id, "video");
       if (!deductResult.success) {
         return res.status(402).json(deductResult);
       }
 
-      const result = await generateVideoByResolution(req.user.id, params);
+      const result = await generateVideo(params);
       res.json({ ...result, creditsRemaining: deductResult.creditsRemaining });
     } catch (error) {
       console.error("Video generation error:", error);
