@@ -33,7 +33,7 @@ function VideoPageComponent() {
   const [extendVideoFile, setExtendVideoFile] = useState<File | null>(null);
   const [prompt, setPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("16:9");
-  const [resolution, setResolution] = useState("720p");
+const [resolution, setResolution] = useState("4k");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -298,34 +298,33 @@ function VideoPageComponent() {
               </div>
             )}
 
-            {/* Formato e Resolução */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Formato</Label>
-                <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                  <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
-                    <SelectItem value="16:9">Panorâmico (16:9)</SelectItem>
-                    <SelectItem value="9:16">Rede Social (9:16)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Resolução</Label>
-                <Select value={resolution} onValueChange={setResolution}>
-                  <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
-                    <SelectItem value="720p">720p</SelectItem>
-                    <SelectItem value="1080p">1080p</SelectItem>
-                    <SelectItem value="4k">4K</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+{/* Formato e Resolução */}
+<div className="grid grid-cols-2 gap-4">
+  <div className="space-y-2">
+    <Label>Formato</Label>
+    <Select value={aspectRatio} onValueChange={setAspectRatio}>
+      <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
+        <SelectItem value="16:9">Panorâmico (16:9)</SelectItem>
+        <SelectItem value="9:16">Rede Social (9:16)</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+  <div className="space-y-2">
+    <Label>Resolução</Label>
+    <Select value={resolution} onValueChange={setResolution}>
+      <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
+        <SelectItem value="4k">4K</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+</div>
+
 
             {/* Botão Gerar */}
             <Button
