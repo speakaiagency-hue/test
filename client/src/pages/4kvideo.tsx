@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Video, Upload } from "lucide-react";
+import { Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,75 +47,6 @@ function VideoPageComponent() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        const base64 = await fileToBase64(file);
-        const url = URL.createObjectURL(file);
-        setUploadedImage(url);
-        setUploadedImageData({ base64, mimeType: file.type, file });
-        toast({ title: "Arquivo carregado com sucesso!" });
-      } catch {
-        toast({ title: "Erro ao carregar arquivo", variant: "destructive" });
-      }
-    }
-  };
-
-  const handleReferenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (referenceImages.length >= 3) {
-        toast({ title: "Máximo de 3 imagens permitidas", variant: "destructive" });
-        return;
-      }
-      try {
-        const base64 = await fileToBase64(file);
-        const url = URL.createObjectURL(file);
-        setReferenceImages([...referenceImages, url]);
-        setReferenceImagesData([...referenceImagesData, { base64, mimeType: file.type, file }]);
-        toast({ title: "Referência adicionada!" });
-      } catch {
-        toast({ title: "Erro ao carregar arquivo", variant: "destructive" });
-      }
-    }
-  };
-
-  const removeReference = (index: number) => {
-    const newImages = [...referenceImages];
-    newImages.splice(index, 1);
-    setReferenceImages(newImages);
-    const newData = [...referenceImagesData];
-    newData.splice(index, 1);
-    setReferenceImagesData(newData);
-  };
-
-  const handleFirstFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const base64 = await fileToBase64(file);
-      setFirstFrame({ base64, mimeType: file.type, file });
-      toast({ title: "Primeiro frame carregado!" });
-    }
-  };
-
-  const handleLastFrameUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const base64 = await fileToBase64(file);
-      setLastFrame({ base64, mimeType: file.type, file });
-      toast({ title: "Último frame carregado!" });
-    }
-  };
-
-  const handleExtendVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setExtendVideoFile(file);
-      toast({ title: "Vídeo anterior carregado!" });
-    }
   };
 
   const handleGenerate = async () => {
@@ -190,83 +121,87 @@ function VideoPageComponent() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-           {/* Formato e Resolução */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Formato</Label>
-          <Select value={aspectRatio} onValueChange={setAspectRatio}>
-            <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
-              <SelectItem value="16:9">Panorâmico (16:9)</SelectItem>
-              <SelectItem value="9:16">Rede Social (9:16)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label>Resolução</Label>
-          <Select value={resolution} onValueChange={setResolution}>
-            <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
-              <SelectItem value="4k">4K</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Controls */}
+        <Card className="lg:col-span-5 border-border/50 shadow-xl bg-[#0f1117] border-[#1f2937] h-fit overflow-hidden">
+          <CardContent className="p-6 space-y-6">
+            {/* Formato e Resolução */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Formato</Label>
+                <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                  <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
+                    <SelectItem value="16:9">Panorâmico (16:9)</SelectItem>
+                    <SelectItem value="9:16">Rede Social (9:16)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Resolução</Label>
+                <Select value={resolution} onValueChange={setResolution}>
+                  <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
+                    <SelectItem value="4k">4K</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Botão Gerar */}
+            <Button
+              className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold h-14 rounded-lg text-lg mt-4"
+              onClick={handleGenerate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Gerando..." : `${VIDEO_COST} ⚡ Gerar`}
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Cada geração consome {VIDEO_COST} créditos
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Preview */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="aspect-video rounded-2xl overflow-hidden bg-black border shadow-2xl relative">
+            {videoUrl ? (
+              <video
+                src={videoUrl}
+                className="w-full h-full object-cover rounded-lg"
+                controls
+                autoPlay
+                loop
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                {isGenerating ? "Criando sua obra-prima..." : "Preview do Vídeo"}
+              </div>
+            )}
+          </div>
+
+                  {/* Download */}
+          {videoUrl && (
+            <Button
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = videoUrl;
+                link.download = "video.mp4";
+                link.click();
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-indigo-700"
+            >
+              Download
+            </Button>
+          )}
         </div>
       </div>
-
-      {/* Botão Gerar */}
-      <Button
-        className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold h-14 rounded-lg text-lg mt-4"
-        onClick={handleGenerate}
-        disabled={isGenerating}
-      >
-        {isGenerating ? "Gerando..." : `${VIDEO_COST} ⚡ Gerar`}
-      </Button>
-      <p className="text-sm text-muted-foreground mt-2">
-        Cada geração consome {VIDEO_COST} créditos
-      </p>
-    </CardContent>
-  </Card>
-
-  {/* Preview */}
-  <div className="lg:col-span-7 space-y-6">
-    <div className="aspect-video rounded-2xl overflow-hidden bg-black border shadow-2xl relative">
-      {videoUrl ? (
-        <video
-          src={videoUrl}
-          className="w-full h-full object-cover rounded-lg"
-          controls
-          autoPlay
-          loop
-        />
-      ) : (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          {isGenerating ? "Criando sua obra-prima..." : "Preview do Vídeo"}
-        </div>
-      )}
     </div>
-
-    {/* Download */}
-    {videoUrl && (
-      <Button
-        onClick={() => {
-          const link = document.createElement("a");
-          link.href = videoUrl;
-          link.download = "video.mp4";
-          link.click();
-        }}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-indigo-700"
-      >
-        Download
-      </Button>
-    )}
-  </div>
-</div>
-</div>
-);
+  );
 }
 
 export default withMembershipCheck(VideoPageComponent);
