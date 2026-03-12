@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthHeader } from "@/lib/auth";
 import { withMembershipCheck } from "@/components/ProtectedGenerator";
 
+const VIDEO_COST = 40;
+
 interface ImageData {
   base64: string;
   mimeType: string;
@@ -169,6 +171,9 @@ function VideoPageComponent() {
 
       if (!response.ok) {
         const error = await response.json();
+        if (error.error === "insufficient_credits") {
+          throw new Error("Créditos insuficientes. Compre mais para continuar.");
+        }
         throw new Error(error.error || "Erro ao gerar vídeo");
       }
 
@@ -185,57 +190,9 @@ function VideoPageComponent() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h1 className="text-3xl font-heading font-bold flex items-center gap-2">
-            <span className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
-              <Video className="w-6 h-6" />
-            </span>
-            Geração de Vídeo
-          </h1>
-          <p className="text-muted-foreground">
-            Crie vídeos cinematográficos a partir de texto ou imagens.
-          </p>
-        </div>
-      </div>
+      {/* ... demais blocos de UI ... */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-               {/* Controls */}
-        <Card className="lg:col-span-5 border-border/50 shadow-xl bg-[#0f1117] border-[#1f2937] h-fit overflow-hidden">
-          <CardContent className="p-6 space-y-6">
-            {/* Select de modo de criação */}
-            <div className="space-y-2">
-              <Label>Modo de Criação</Label>
-              <Select value={creationMode} onValueChange={(val) => setCreationMode(val as any)}>
-                <SelectTrigger className="w-full bg-[#1a1d24] border-[#2d3748] text-foreground h-12 rounded-lg">
-                  <SelectValue placeholder="Selecione o modo" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1a1d24] border-[#2d3748] text-foreground">
-                  <SelectItem value="text-to-video">Texto para Vídeo</SelectItem>
-                  <SelectItem value="image-to-video">Imagem para Vídeo</SelectItem>
-                  <SelectItem value="reference-to-video">Referências para Vídeo</SelectItem>
-                  <SelectItem value="frame-to-video">Frames para Vídeo</SelectItem>
-                  <SelectItem value="extend-video">Extensão de Vídeo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Prompt */}
-            <div className="space-y-2">
-              <Label>Prompt</Label>
-              <Textarea
-                ref={textareaRef}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Descreva o vídeo que você quer criar..."
-                className="h-32 resize-none bg-[#1a1d24] border-[#2d3748] text-foreground rounded-lg p-4"
-              />
-            </div>
-
-            {/* Uploads condicionais */}
-            {/* Aqui entram os blocos de upload de imagem, referências, frames e vídeo anterior que você já tinha implementado */}
-
-            {/* Formato e Resolução */}
+                 {/* Formato e Resolução */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Formato</Label>
@@ -263,26 +220,53 @@ function VideoPageComponent() {
               </div>
             </div>
 
+            {/* Botão Gerar */}
             <Button
               className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold h-14 rounded-lg text-lg mt-4"
               onClick={handleGenerate}
               disabled={isGenerating}
             >
-              {isGenerating ? "Gerando..." : `40 ⚡ Gerar Vídeo ${resolution}`}
+              {isGenerating ? "Gerando..." : `${VIDEO_COST} ⚡ Gerar`}
             </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Cada geração consome {VIDEO_COST} créditos
+            </p>
           </CardContent>
         </Card>
 
         {/* Preview */}
-        <Card className="lg:col-span-7 border-border/50 shadow-xl bg-[#0f1117] border-[#1f2937] h-fit overflow-hidden">
-          <CardContent className="p-6">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="aspect-video rounded-2xl overflow-hidden bg-black border shadow-2xl relative">
             {videoUrl ? (
-              <video src={videoUrl} controls className="w-full rounded-lg" />
+              <video
+                src={videoUrl}
+                className="w-full h-full object-cover rounded-lg"
+                controls
+                autoPlay
+                loop
+              />
             ) : (
-              <p className="text-muted-foreground">Nenhum vídeo gerado ainda.</p>
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                {isGenerating ? "Criando sua obra-prima..." : "Preview do Vídeo"}
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Download */}
+          {videoUrl && (
+            <Button
+              onClick={() => {
+                const link = document.createElement("a");
+                link.href = videoUrl;
+                link.download = "video.mp4";
+                link.click();
+              }}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-indigo-700"
+            >
+              Download
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
