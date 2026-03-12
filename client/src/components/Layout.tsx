@@ -65,6 +65,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/prompt", icon: Type, label: "Gerador de Prompt" },
     { href: "/image", icon: ImageIcon, label: "Gerar Imagem" },
     { href: "/video", icon: Video, label: "Gerar Vídeo" },
+    { href: "/video-4k", icon: Video, label: "Gerar Vídeo 4K" }, // ✅ novo item
   ];
 
   const handleNavigate = (href: string) => {
@@ -209,7 +210,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
            {/* Main Content */}
       <main className="flex-1 md:pl-64 min-h-screen pt-24 md:pt-0 bg-background">
-        {/* Top Bar (desktop) sem borda */}
+        {/* Top Bar (desktop) */}
         <div className="hidden md:flex fixed top-0 right-0 left-64 h-20 bg-background/80 backdrop-blur-xl items-center justify-between px-6 z-30">
           <div />
           <div className="flex items-center gap-3">
