@@ -94,6 +94,7 @@ export interface IStorage {
   addCredits(userId: string, amount: number, purchaseId?: string): Promise<any>;
   deductCredits(userId: string, amount: number): Promise<any>;
   hasProcessedPurchase(purchaseId: string): Promise<any>;
+  markPurchaseAsProcessed(purchaseId: string): Promise<void>;
   logWebhookEvent(
     purchaseId: string,
     userId: string,
@@ -134,9 +135,8 @@ export class DatabaseStorage implements IStorage {
     const normalizedEmail = user.email?.toLowerCase();
     const normalizedUsername = user.username
       ? user.username.toLowerCase()
-      : normalizedEmail; // usa email como username se não vier nada
+      : normalizedEmail;
 
-    // ✅ Hash da senha antes de salvar
     const hashedPassword = await bcrypt.hash(user.password, 10);
 
     const normalizedUser = {
@@ -149,7 +149,6 @@ export class DatabaseStorage implements IStorage {
     const result = await database.insert(users).values(normalizedUser).returning();
     const newUser = result[0];
 
-    // Cria registro inicial de créditos
     await database.insert(userCredits).values({
       userId: newUser.id,
       credits: 0,
@@ -177,13 +176,11 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserPassword(id: string, password: string) {
     const database = await getDb();
-    // ✅ Sempre recebe senha em texto puro e faz o hash aqui
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await database.update(users).set({ password: hashedPassword }).where(eq(users.id, id)).returning();
     return result[0];
   }
 
-  // ✅ Créditos
   async getUserCredits(userId: string) {
     const database = await getDb();
     const result = await database.select().from(userCredits).where(eq(userCredits.userId, userId));
@@ -219,6 +216,9 @@ export class DatabaseStorage implements IStorage {
       kiwifyPurchaseId: purchaseId,
       operationType: "system",
     });
+
+    const result = await database.select().from(userCredits).where(eq(userCredits.userId, userId));
+    return result[0];
   }
 
   async deductCredits(userId: string, amount: number) {
@@ -239,6 +239,9 @@ export class DatabaseStorage implements IStorage {
       description: "Créditos utilizados",
       operationType: "system",
     });
+
+    const result = await database.select().from(userCredits).where(eq(userCredits.userId, userId));
+    return result[0];
   }
 
   async hasProcessedPurchase(purchaseId: string) {
@@ -247,7 +250,14 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  async logWebhookEvent(
+  async markPurchaseAsProcessed(purchaseId: string) {
+    const database = await getDb();
+    await database.update(pendingPurchases)
+      .set({ used: true, status: "processed" })
+      .where(eq(pendingPurchases.purchaseId, purchaseId));
+  }
+
+    async logWebhookEvent(
     purchaseId: string,
     userId: string,
     credits: number,
@@ -266,7 +276,7 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-     // ✅ Compras pendentes
+  // ✅ Compras pendentes
   async addPendingPurchase(data: { purchaseId: string; email: string; productId: string; credits: number; status: string }) {
     const database = await getDb();
     await database.insert(pendingPurchases).values({
@@ -294,6 +304,13 @@ export class DatabaseStorage implements IStorage {
     await database
       .update(pendingPurchases)
       .set({ used: true })
+      .where(eq(pendingPurchases.purchaseId, purchaseId));
+  }
+
+  async markPurchaseAsProcessed(purchaseId: string) {
+    const database = await getDb();
+    await database.update(pendingPurchases)
+      .set({ used: true, status: "processed" })
       .where(eq(pendingPurchases.purchaseId, purchaseId));
   }
 }
