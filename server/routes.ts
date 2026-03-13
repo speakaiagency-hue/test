@@ -20,7 +20,7 @@ export async function registerRoutes(
   const promptService = await createPromptService();
   const imageService = await createImageService();
 
-  // Video Generation API (Protected)
+  // ✅ Video Generation API (Protected)
   app.post("/api/video/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
@@ -30,13 +30,19 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Prompt é obrigatório" });
       }
 
-      const deductResult = await deductCredits(req.user.id, "video");
+      // ✅ Deduz créditos conforme resolução escolhida
+      const deductResult = await deductCredits(req.user.id, "video", { resolution: params.resolution });
       if (!deductResult.success) {
         return res.status(402).json(deductResult);
       }
 
       const result = await generateVideo(params);
-      res.json({ ...result, creditsRemaining: deductResult.creditsRemaining });
+
+      res.json({
+        ...result,
+        creditsDeducted: deductResult.cost,
+        creditsRemaining: deductResult.creditsRemaining,
+      });
     } catch (error) {
       console.error("Video generation error:", error);
       const message = error instanceof Error ? error.message : "Erro ao gerar vídeo";
@@ -130,7 +136,7 @@ export async function registerRoutes(
     }
   });
 
-  // ✅ Image Generation API (Protected) corrigida para múltiplas imagens
+  // ✅ Image Generation API (Protected)
   app.post("/api/image/generate", authMiddleware, async (req: Request, res: Response) => {
     try {
       if (!req.user) return res.status(401).json({ error: "Usuário não autenticado" });
