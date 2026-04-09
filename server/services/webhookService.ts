@@ -7,44 +7,34 @@ export interface KiwifyWebhookData {
   customer_name: string;
   product_name: string;
   product_id: string;
-  checkout_link?: string;
+  checkout_link?: string; // ✅ suporte ao link curto
   value: number;
   status: string;
 }
 
-// Custos fixos para outras operações
 const CREDIT_COSTS = {
   chat: 1,
   image: 7,
   prompt: 0,
-};
-
-// Custos variáveis para vídeo conforme resolução
-const VIDEO_COSTS: Record<string, number> = {
-  "720p": 20,
-  "1080p": 40,
-  "4k": 100,
+  video: 40,
 };
 
 const CREDIT_MAP: Record<string, number> = {
   // Links curtos (checkout_link)
-  "97ObxqK": 100,
-  "3gpZJ6N": 200,
-  "M2XmJF7": 300,
-  "ntcPS8x": 500,
-  "Tqy289G": 1000,
-  "f8d7PdX": 2000,
-  "8IDayIy": 500,    // Plano Básico
-  "QnHmsQm": 1500,   // Plano Pro
-  "hOJ3bEi": 5000,   // Plano Premium
+"97ObxqK": 100,
+"3gpZJ6N": 200,
+"M2XmJF7": 300,
+"ntcPS8x": 500,
+"Tqy289G": 1000,
+"f8d7PdX": 2000,
+"8IDayIy": 500,    // Plano Básico
+"QnHmsQm": 1500,   // Plano Pro
+"hOJ3bEi": 5000,   // Plano Premium
 
-  // UUIDs internos (product_id)
-  "57c511c0-05d2-11f1-a5d8-9909e220e83a": 2000,  // Produto de Créditos
-  "f1e06ef0-05d0-11f1-b57c-c9aa21f3f207": 5000,  // Produto de Planos
+// UUIDs internos (product_id)
+"57c511c0-05d2-11f1-a5d8-9909e220e83a": 2000,  // Produto de Créditos
+"f1e06ef0-05d0-11f1-b57c-c9aa21f3f207": 5000,  // Produto de Planos
 };
-
-// Senha padrão para usuários criados automaticamente
-const DEFAULT_PASSWORD = process.env.DEFAULT_USER_PASSWORD || "Speak123";
 
 export async function verifyKiwifySignature(payload: string, signature: string): Promise<boolean> {
   const secret = process.env.KIWIFY_WEBHOOK_SECRET || "";
@@ -62,8 +52,9 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
       return { success: false, message: "Compra não aprovada" };
     }
 
-    // 🔑 Identificar produto
+    // 🔑 Flexível: tenta primeiro pelo checkout_link, depois pelo product_id
     let productKey: string | undefined;
+
     if (data.checkout_link && CREDIT_MAP[data.checkout_link]) {
       productKey = data.checkout_link;
     } else if (data.product_id && CREDIT_MAP[data.product_id]) {
@@ -71,44 +62,54 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
     }
 
     const creditsToAdd = productKey ? CREDIT_MAP[productKey] : 0;
+
     if (creditsToAdd === 0) {
-      console.warn("⚠️ Produto não reconhecido:", JSON.stringify(data, null, 2));
+      console.warn(
+        `⚠️ Produto não reconhecido: product_id=${data.product_id}, checkout_link=${data.checkout_link}`
+      );
       return { success: false, message: "Produto não reconhecido" };
     }
 
-    // 🔎 Evitar duplicatas
-    const alreadyProcessed = await storage.hasProcessedPurchase(data.purchase_id);
+    const alreadyProcessed = await storage.hasProcessedPurchase?.(data.purchase_id);
     if (alreadyProcessed) {
       console.log(`ℹ️ Compra ${data.purchase_id} já processada, ignorando duplicata.`);
       return {
         success: true,
         message: "Compra já processada",
+        userId: alreadyProcessed.userId,
         creditsAdded: 0,
       };
     }
 
-    // 🔎 Normalizar email
-    const normalizedEmail = (data.customer_email || "").trim().toLowerCase();
-    let user = await storage.getUserByEmail(normalizedEmail);
+    // 🔎 Normalizar email antes de buscar
+    const normalizedEmail = data.customer_email.toLowerCase();
+    let user = await storage.getUserByEmail?.(normalizedEmail);
 
     if (!user) {
-      // ✅ Criar usuário automático com senha padrão
-      console.log(`🆕 Criando usuário automático para ${normalizedEmail}`);
-      user = await storage.createUser({
+      // ✅ Fluxo 2: usuário ainda não existe → salvar como pendente
+      console.warn(
+        `⚠️ Usuário com email ${normalizedEmail} não encontrado. Registrando compra como pendente.`
+      );
+
+      await storage.addPendingPurchase({
+        purchaseId: data.purchase_id,
         email: normalizedEmail,
-        name: data.customer_name,
-        password: DEFAULT_PASSWORD,
+        productId: productKey ?? data.product_id,
+        credits: creditsToAdd,
+        status: data.status,
       });
+
+      return {
+        success: true,
+        message: "Compra registrada como pendente (aguardando cadastro)",
+        userId: null,
+        creditsAdded: 0,
+      };
     }
 
-    // ✅ Adicionar créditos ao usuário
+    // ✅ Fluxo 1: adicionar créditos ao usuário existente
     await storage.addCredits(user.id, creditsToAdd, data.purchase_id);
-
-    // 🔎 Marcar compra como processada
-    await storage.markPurchaseAsProcessed(data.purchase_id);
-
-    // 🔎 Log do evento
-    await storage.logWebhookEvent(
+    await storage.logWebhookEvent?.(
       data.purchase_id,
       user.id,
       creditsToAdd,
@@ -117,7 +118,9 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
       data
     );
 
-    console.log(`✅ Compra processada: ${creditsToAdd} créditos adicionados para ${user.email} (ID: ${user.id})`);
+    console.log(
+      `✅ Compra processada: ${creditsToAdd} créditos adicionados para ${user.email} (ID: ${user.id})`
+    );
 
     return {
       success: true,
@@ -133,35 +136,31 @@ export async function handleKiwifyPurchase(data: KiwifyWebhookData) {
 
 export async function deductCredits(
   userId: string,
-  operationType: "chat" | "image" | "prompt" | "video",
-  options?: { resolution?: string }
+  operationType: "chat" | "image" | "prompt" | "video"
 ) {
   try {
-    let cost = CREDIT_COSTS[operationType];
+    const cost = CREDIT_COSTS[operationType];
 
-    // Se for vídeo, usar custo variável conforme resolução
-    if (operationType === "video") {
-      const resolution = options?.resolution ?? "1080p"; // padrão
-      cost = VIDEO_COSTS[resolution] || VIDEO_COSTS["1080p"];
-    }
-
+    // 🔎 Buscar créditos atuais antes de deduzir
     const currentCredits = await storage.getUserCredits(userId);
-    console.log(`🔎 Usuário ${userId} tem ${currentCredits?.credits ?? 0} créditos antes da operação`);
-
     if (!currentCredits || currentCredits.credits < cost) {
       return {
         success: false,
         error: "insufficient_credits",
-        message: `Saldo atual: ${currentCredits?.credits ?? 0}. Você precisa de ${cost} créditos para gerar ${operationType} em ${options?.resolution ?? "1080p"}.`,
+        message: `Você precisa de ${cost} créditos para usar ${operationType}. Compre mais créditos.`,
       };
     }
 
+    // ✅ Deduzir créditos
     const result = await storage.deductCredits(userId, cost);
-    console.log(`✅ Deduzidos ${cost} créditos para ${operationType} (${options?.resolution}). Restante: ${result?.credits}`);
+
+    console.log(
+      `✅ Deduzidos ${cost} créditos para ${operationType}. Restante: ${result?.credits}`
+    );
 
     return {
       success: true,
-      creditsRemaining: result?.credits ?? (currentCredits.credits - cost),
+      creditsRemaining: result?.credits ?? currentCredits.credits - cost,
       cost,
     };
   } catch (error) {
