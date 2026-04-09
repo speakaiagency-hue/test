@@ -10,13 +10,13 @@ import { getAuthHeader } from "@/lib/auth";
 import { withMembershipCheck } from "@/components/ProtectedGenerator";
 
 const VIDEO_COSTS: Record<string, number> = {
-  "720p": 20,
-  "1080p": 40,
-  "4k": 80,
+  "720p": 100,
+  "1080p": 100,
+  "4k": 100,
 };
 
 const getVideoCost = (resolution: string) => {
-  return VIDEO_COSTS[resolution] || 40;
+  return VIDEO_COSTS[resolution] || 100;
 };
 
 interface ImageData {
