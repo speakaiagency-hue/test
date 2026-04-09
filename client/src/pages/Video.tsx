@@ -12,7 +12,7 @@ import { withMembershipCheck } from "@/components/ProtectedGenerator";
 const VIDEO_COSTS: Record<string, number> = {
   "720p": 20,
   "1080p": 40,
-  "4k": 100,
+  "4k": 80,
 };
 
 const getVideoCost = (resolution: string) => {
